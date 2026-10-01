@@ -1,0 +1,98 @@
+[
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "ACN",
+    "pct_from_prev_close": 0.1685,
+    "price": 214.24,
+    "prev_close": 183.35,
+    "trade_time": "2026-10-01T19:45:47.66472174Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "CDW",
+    "pct_from_prev_close": 0.0682,
+    "price": 136.89,
+    "prev_close": 128.15,
+    "trade_time": "2026-10-01T19:45:36.042291659Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "CIEN",
+    "pct_from_prev_close": 0.0735,
+    "price": 377.78,
+    "prev_close": 351.9,
+    "trade_time": "2026-10-01T19:45:43.78033396Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "CDNS",
+    "pct_from_prev_close": 0.0625,
+    "price": 351,
+    "prev_close": 330.365,
+    "trade_time": "2026-10-01T19:45:33.374744861Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "CTSH",
+    "pct_from_prev_close": 0.069,
+    "price": 61.435,
+    "prev_close": 57.47,
+    "trade_time": "2026-10-01T19:45:48.843941396Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "COHR",
+    "pct_from_prev_close": 0.1044,
+    "price": 317.735,
+    "prev_close": 287.7,
+    "trade_time": "2026-10-01T19:45:44.964364607Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "FICO",
+    "pct_from_prev_close": 0.133,
+    "price": 671.615,
+    "prev_close": 592.8,
+    "trade_time": "2026-10-01T19:45:35.867123508Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "MCK",
+    "pct_from_prev_close": 0.0563,
+    "price": 902.55,
+    "prev_close": 854.46,
+    "trade_time": "2026-10-01T19:45:29.31467619Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "LITE",
+    "pct_from_prev_close": 0.0718,
+    "price": 1042.13,
+    "prev_close": 972.335,
+    "trade_time": "2026-10-01T19:45:46.711682259Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "MPC",
+    "pct_from_prev_close": 0.0597,
+    "price": 419.33,
+    "prev_close": 395.71,
+    "trade_time": "2026-10-01T19:45:26.272490696Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "RDDT",
+    "pct_from_prev_close": 0.0529,
+    "price": 149.99,
+    "prev_close": 142.455,
+    "trade_time": "2026-10-01T19:45:46.701289509Z"
+  },
+  {
+    "time_et": "2026-10-01T15:45:50.358790-04:00",
+    "symbol": "SNPS",
+    "pct_from_prev_close": 0.1314,
+    "price": 492.06,
+    "prev_close": 434.91,
+    "trade_time": "2026-10-01T19:45:44.798373628Z"
+  }
+]
