@@ -4,3 +4,5 @@ __pycache__/
 .pytest_cache/
 alert_state.json
 poll_alerts_log.csv
+worker-trigger/.wrangler/
+node_modules/
