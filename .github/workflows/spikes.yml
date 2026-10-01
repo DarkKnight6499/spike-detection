@@ -1,0 +1,35 @@
+name: spikes
+on:
+  workflow_dispatch:
+    inputs:
+      until:
+        description: "ET time to stop streaming (HH:MM)"
+        default: "16:00"
+
+# One stream at a time (Alpaca free plan allows 1 connection); a queued run waits for the running one.
+concurrency:
+  group: spike-stream
+  cancel-in-progress: false
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python spike_detector.py live --until "${{ inputs.until }}"
+        env:
+          ALPACA_KEY: ${{ secrets.ALPACA_KEY }}
+          ALPACA_SECRET: ${{ secrets.ALPACA_SECRET }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alerts-log-${{ github.run_id }}
+          path: alerts_log.csv
+          if-no-files-found: ignore

@@ -1,0 +1,4 @@
+alerts_log.csv
+sp500_constituents.csv
+__pycache__/
+.pytest_cache/
