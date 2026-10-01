@@ -2,3 +2,5 @@ alerts_log.csv
 sp500_constituents.csv
 __pycache__/
 .pytest_cache/
+alert_state.json
+poll_alerts_log.csv

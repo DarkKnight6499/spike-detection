@@ -1,6 +1,7 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
+    py spike_detector.py poll                 # one-shot: alert on moves of 10%+ vs previous close (run every 5 min)
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
 Env vars: ALPACA_KEY, ALPACA_SECRET, NTFY_TOPIC (live mode only).
@@ -8,6 +9,7 @@ Env vars: ALPACA_KEY, ALPACA_SECRET, NTFY_TOPIC (live mode only).
 import asyncio
 import csv
 import io
+import json
 import os
 import statistics
 import sys
@@ -49,6 +51,15 @@ MAX_ALERTS_IN_PUSH = 8
 
 SEED_MINUTES = 60         # history fetched at live start to warm the baselines
 HIST_CHUNK = 100          # symbols per historical request
+
+SNAPSHOT_URL = "https://data.alpaca.markets/v2/stocks/snapshots"
+SNAPSHOT_CHUNK = 100
+SPIKE_PCT = 0.10          # poll mode: alert when price is this far from the previous close
+REALERT_STEP = 0.05       # poll mode: re-alert only after the move extends by this much
+SPLIT_CHECK_PCT = 0.30    # moves this large are tagged for a split check
+POLL_STATE = BASE_DIR / "alert_state.json"
+POLL_LOG = BASE_DIR / "poll_alerts_log.csv"
+POLL_LOG_COLUMNS = ["time_et", "symbol", "pct_from_prev_close", "price", "prev_close", "trade_time"]
 
 ET = ZoneInfo("America/New_York")
 MARKET_OPEN = dtime(9, 30)
@@ -276,10 +287,94 @@ async def run_live(force=False, until_et=MARKET_CLOSE):
         await stream.close()
 
 
+@dataclass
+class PriceAlert:
+    symbol: str
+    price: float
+    prev_close: float
+    pct: float
+    trade_time: str
+
+
+def check_spikes(snapshots, state, today):
+    """Pure core of poll mode: returns (alerts, new_state); state maps symbol to last alerted pct for today."""
+    levels = dict(state.get("levels", {})) if state.get("date") == today else {}
+    alerts = []
+    for symbol, snap in snapshots.items():
+        trade = (snap or {}).get("latestTrade") or {}
+        prev = (snap or {}).get("prevDailyBar") or {}
+        price, prev_close = trade.get("p"), prev.get("c")
+        if not price or not prev_close:
+            continue
+        pct = price / prev_close - 1.0
+        if abs(pct) < SPIKE_PCT:
+            continue
+        last = levels.get(symbol)
+        same_side = last is not None and (last > 0) == (pct > 0)
+        if same_side and abs(pct) - abs(last) < REALERT_STEP:
+            continue
+        levels[symbol] = pct
+        alerts.append(PriceAlert(symbol, price, prev_close, pct, trade.get("t", "")))
+    return alerts, {"date": today, "levels": levels}
+
+
+def format_poll_push(alerts):
+    alerts = sorted(alerts, key=lambda a: abs(a.pct), reverse=True)
+    lines = []
+    for a in alerts[:MAX_ALERTS_IN_PUSH]:
+        tag = " (check split)" if abs(a.pct) >= SPLIT_CHECK_PCT else ""
+        lines.append(f"{a.symbol} {a.pct:+.1%} to {a.price:.2f} (prev close {a.prev_close:.2f}){tag}")
+    if len(alerts) > MAX_ALERTS_IN_PUSH:
+        lines.append(f"+{len(alerts) - MAX_ALERTS_IN_PUSH} more")
+    return f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} moved {SPIKE_PCT:.0%}+", "\n".join(lines)
+
+
+def fetch_snapshots(symbols):
+    headers = {"APCA-API-KEY-ID": os.environ[ALPACA_KEY_ENV], "APCA-API-SECRET-KEY": os.environ[ALPACA_SECRET_ENV]}
+    out = {}
+    for i in range(0, len(symbols), SNAPSHOT_CHUNK):
+        resp = requests.get(SNAPSHOT_URL, headers=headers, timeout=30,
+                            params={"symbols": ",".join(symbols[i:i + SNAPSHOT_CHUNK]), "feed": "iex"})
+        resp.raise_for_status()
+        data = resp.json()
+        out.update(data.get("snapshots", data))
+    return out
+
+
+def run_poll(force=False):
+    if not force and not market_is_open():
+        print("Market closed")
+        return
+    symbols = load_universe()
+    snapshots = fetch_snapshots(symbols)
+    usable = sum(1 for s in snapshots.values() if (s or {}).get("latestTrade") and (s or {}).get("prevDailyBar"))
+    print(f"{len(snapshots)} snapshots, {usable} usable of {len(symbols)} symbols")
+    today = datetime.now(ET).date().isoformat()
+    state = json.loads(POLL_STATE.read_text()) if POLL_STATE.exists() else {}
+    alerts, new_state = check_spikes(snapshots, state, today)
+    POLL_STATE.write_text(json.dumps(new_state))
+    if not alerts:
+        print("No spikes")
+        return
+    new_file = not POLL_LOG.exists()
+    with open(POLL_LOG, "a", newline="", encoding="utf-8") as fh:
+        writer = csv.writer(fh)
+        if new_file:
+            writer.writerow(POLL_LOG_COLUMNS)
+        for a in alerts:
+            writer.writerow([datetime.now(ET).isoformat(), a.symbol, f"{a.pct:.4f}", a.price, a.prev_close, a.trade_time])
+    title, body = format_poll_push(alerts)
+    print(f"{title}\n{body}")
+    Notifier(os.environ[NTFY_TOPIC_ENV]).push(title, body, high=True)
+
+
 def main():
     args = sys.argv[1:]
-    if not args or args[0] not in ("live", "replay"):
+    if not args or args[0] not in ("live", "replay", "poll"):
         print(__doc__)
+        return
+    if args[0] == "poll":
+        run_poll(force="--force" in args)
         return
     if args[0] == "replay":
         day = date.fromisoformat(args[1]) if len(args) > 1 else date.today() - timedelta(days=1)

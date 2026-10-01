@@ -5,5 +5,5 @@ workers_dev = false
 preview_urls = false
 
 [triggers]
-# UTC slots for 09:25 and 14:50 ET in both EDT and EST; trigger.js dispatches only the one that matches ET.
-crons = ["25 13,14 * * 1-5", "50 18,19 * * 1-5"]
+# Every 5 minutes across both UTC offsets of the 09:30 to 16:00 ET session; trigger.js applies the exact ET gate.
+crons = ["*/5 13-21 * * 1-5"]
