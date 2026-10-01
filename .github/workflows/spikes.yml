@@ -36,5 +36,5 @@ jobs:
         run: |
           git config user.name "spike-bot"
           git config user.email "spike-bot@users.noreply.github.com"
-          git add alerts/poll_alerts_log.csv
+          git add alerts/poll_alerts.json
           git diff --cached --quiet || (git commit -m "Alerts $(date -u +%FT%TZ)" && git pull --rebase origin main && git push origin main)

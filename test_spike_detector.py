@@ -85,3 +85,12 @@ def test_poll_push_title_and_split_tag():
     alerts, _ = sd.check_spikes({"X": snap(140, 100)}, {}, "2026-09-30")
     title, body = sd.format_poll_push(alerts)
     assert title == "1 stock up 5%+" and "check split" in body
+
+
+def test_poll_log_appends_json(tmp_path, monkeypatch):
+    monkeypatch.setattr(sd, "POLL_LOG", tmp_path / "alerts" / "poll_alerts.json")
+    alerts, _ = sd.check_spikes({"UP": snap(106, 100)}, {}, "2026-09-30")
+    sd.append_poll_log(alerts, T0)
+    sd.append_poll_log(alerts, T0)
+    rows = __import__("json").loads(sd.POLL_LOG.read_text())
+    assert len(rows) == 2 and rows[0]["symbol"] == "UP" and rows[0]["pct_from_prev_close"] == 0.06

@@ -58,8 +58,7 @@ SPIKE_PCT = 0.05          # poll mode: alert when price is this far ABOVE the pr
 REALERT_STEP = 0.05       # poll mode: re-alert only after the move extends by this much
 SPLIT_CHECK_PCT = 0.30    # moves this large are tagged for a split check
 POLL_STATE = BASE_DIR / "alert_state.json"
-POLL_LOG = BASE_DIR / "alerts" / "poll_alerts_log.csv"   # tracked in git; the workflow commits it
-POLL_LOG_COLUMNS = ["time_et", "symbol", "pct_from_prev_close", "price", "prev_close", "trade_time"]
+POLL_LOG = BASE_DIR / "alerts" / "poll_alerts.json"   # tracked in git; the workflow commits it
 
 ET = ZoneInfo("America/New_York")
 MARKET_OPEN = dtime(9, 30)
@@ -340,6 +339,14 @@ def fetch_snapshots(symbols):
     return out
 
 
+def append_poll_log(alerts, now):
+    POLL_LOG.parent.mkdir(exist_ok=True)
+    history = json.loads(POLL_LOG.read_text(encoding="utf-8")) if POLL_LOG.exists() else []
+    history.extend({"time_et": now.isoformat(), "symbol": a.symbol, "pct_from_prev_close": round(a.pct, 4),
+                    "price": a.price, "prev_close": a.prev_close, "trade_time": a.trade_time} for a in alerts)
+    POLL_LOG.write_text(json.dumps(history, indent=2), encoding="utf-8")
+
+
 def run_poll(force=False):
     if not force and not market_is_open():
         print("Market closed")
@@ -355,14 +362,7 @@ def run_poll(force=False):
     if not alerts:
         print("No spikes")
         return
-    POLL_LOG.parent.mkdir(exist_ok=True)
-    new_file = not POLL_LOG.exists()
-    with open(POLL_LOG, "a", newline="", encoding="utf-8") as fh:
-        writer = csv.writer(fh)
-        if new_file:
-            writer.writerow(POLL_LOG_COLUMNS)
-        for a in alerts:
-            writer.writerow([datetime.now(ET).isoformat(), a.symbol, f"{a.pct:.4f}", a.price, a.prev_close, a.trade_time])
+    append_poll_log(alerts, datetime.now(ET))
     title, body = format_poll_push(alerts)
     print(f"{title}\n{body}")
     Notifier(os.environ[NTFY_TOPIC_ENV]).push(title, body, high=True)
