@@ -58,7 +58,7 @@ SPIKE_PCT = 0.05          # poll mode: alert when price is this far ABOVE the pr
 REALERT_STEP = 0.05       # poll mode: re-alert only after the move extends by this much
 SPLIT_CHECK_PCT = 0.30    # moves this large are tagged for a split check
 POLL_STATE = BASE_DIR / "alert_state.json"
-POLL_LOG = BASE_DIR / "poll_alerts_log.csv"
+POLL_LOG = BASE_DIR / "alerts" / "poll_alerts_log.csv"   # tracked in git; the workflow commits it
 POLL_LOG_COLUMNS = ["time_et", "symbol", "pct_from_prev_close", "price", "prev_close", "trade_time"]
 
 ET = ZoneInfo("America/New_York")
@@ -355,6 +355,7 @@ def run_poll(force=False):
     if not alerts:
         print("No spikes")
         return
+    POLL_LOG.parent.mkdir(exist_ok=True)
     new_file = not POLL_LOG.exists()
     with open(POLL_LOG, "a", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
