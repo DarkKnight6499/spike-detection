@@ -1,7 +1,7 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on moves of 10%+ vs previous close (run every 5 min)
+    py spike_detector.py poll                 # one-shot: alert on gains of 5%+ vs previous close (run every 5 min)
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
 Env vars: ALPACA_KEY, ALPACA_SECRET, NTFY_TOPIC (live mode only).
@@ -54,7 +54,7 @@ HIST_CHUNK = 100          # symbols per historical request
 
 SNAPSHOT_URL = "https://data.alpaca.markets/v2/stocks/snapshots"
 SNAPSHOT_CHUNK = 100
-SPIKE_PCT = 0.10          # poll mode: alert when price is this far from the previous close
+SPIKE_PCT = 0.05          # poll mode: alert when price is this far ABOVE the previous close (gains only)
 REALERT_STEP = 0.05       # poll mode: re-alert only after the move extends by this much
 SPLIT_CHECK_PCT = 0.30    # moves this large are tagged for a split check
 POLL_STATE = BASE_DIR / "alert_state.json"
@@ -307,11 +307,10 @@ def check_spikes(snapshots, state, today):
         if not price or not prev_close:
             continue
         pct = price / prev_close - 1.0
-        if abs(pct) < SPIKE_PCT:
+        if pct < SPIKE_PCT:
             continue
         last = levels.get(symbol)
-        same_side = last is not None and (last > 0) == (pct > 0)
-        if same_side and abs(pct) - abs(last) < REALERT_STEP:
+        if last is not None and pct - last < REALERT_STEP:
             continue
         levels[symbol] = pct
         alerts.append(PriceAlert(symbol, price, prev_close, pct, trade.get("t", "")))
@@ -326,7 +325,7 @@ def format_poll_push(alerts):
         lines.append(f"{a.symbol} {a.pct:+.1%} to {a.price:.2f} (prev close {a.prev_close:.2f}){tag}")
     if len(alerts) > MAX_ALERTS_IN_PUSH:
         lines.append(f"+{len(alerts) - MAX_ALERTS_IN_PUSH} more")
-    return f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} moved {SPIKE_PCT:.0%}+", "\n".join(lines)
+    return f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} up {SPIKE_PCT:.0%}+", "\n".join(lines)
 
 
 def fetch_snapshots(symbols):

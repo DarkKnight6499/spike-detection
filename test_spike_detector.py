@@ -62,26 +62,26 @@ def snap(price, prev):
     return {"latestTrade": {"p": price, "t": "2026-09-30T14:00:00Z"}, "prevDailyBar": {"c": prev}}
 
 
-def test_poll_alerts_at_ten_percent_only():
-    alerts, _ = sd.check_spikes({"UP": snap(111, 100), "DN": snap(89, 100), "OK": snap(109, 100)}, {}, "2026-09-30")
-    assert sorted(a.symbol for a in alerts) == ["DN", "UP"]
+def test_poll_alerts_on_gains_of_five_percent_only():
+    snaps = {"UP": snap(106, 100), "EDGE": snap(104, 100), "DN": snap(80, 100)}
+    alerts, _ = sd.check_spikes(snaps, {}, "2026-09-30")
+    assert [a.symbol for a in alerts] == ["UP"]
 
 
-def test_poll_dedupes_until_move_extends():
-    first, state = sd.check_spikes({"UP": snap(111, 100)}, {}, "2026-09-30")
-    again, state = sd.check_spikes({"UP": snap(112, 100)}, state, "2026-09-30")
-    extended, state = sd.check_spikes({"UP": snap(117, 100)}, state, "2026-09-30")
+def test_poll_dedupes_until_gain_extends():
+    first, state = sd.check_spikes({"UP": snap(106, 100)}, {}, "2026-09-30")
+    again, state = sd.check_spikes({"UP": snap(108, 100)}, state, "2026-09-30")
+    extended, state = sd.check_spikes({"UP": snap(112, 100)}, state, "2026-09-30")
     assert len(first) == 1 and again == [] and len(extended) == 1
 
 
 def test_poll_state_resets_next_day_and_handles_missing_data():
-    _, state = sd.check_spikes({"UP": snap(111, 100)}, {}, "2026-09-30")
-    nxt, _ = sd.check_spikes({"UP": snap(111, 100), "BAD": {"latestTrade": None}, "NONE": None}, state, "2026-10-01")
+    _, state = sd.check_spikes({"UP": snap(106, 100)}, {}, "2026-09-30")
+    nxt, _ = sd.check_spikes({"UP": snap(106, 100), "BAD": {"latestTrade": None}, "NONE": None}, state, "2026-10-01")
     assert [a.symbol for a in nxt] == ["UP"]
 
 
-def test_poll_reversal_realerts_and_split_tag():
-    _, state = sd.check_spikes({"X": snap(111, 100)}, {}, "2026-09-30")
-    down, _ = sd.check_spikes({"X": snap(50, 100)}, state, "2026-09-30")
-    title, body = sd.format_poll_push(down)
-    assert len(down) == 1 and "check split" in body and title.startswith("1 stock moved")
+def test_poll_push_title_and_split_tag():
+    alerts, _ = sd.check_spikes({"X": snap(140, 100)}, {}, "2026-09-30")
+    title, body = sd.format_poll_push(alerts)
+    assert title == "1 stock up 5%+" and "check split" in body
