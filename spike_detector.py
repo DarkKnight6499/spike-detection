@@ -1,7 +1,8 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on gains of 5%+ over the last 15 minutes (run every 5 min)
+    py spike_detector.py poll                 # one-shot: alert on moves of 5%+ (up or down) over the last 15 minutes
+    py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every 5 minutes in one process
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
 Env vars: ALPACA_KEY, ALPACA_SECRET, NTFY_TOPIC (live mode only).
@@ -57,7 +58,10 @@ SNAPSHOT_CHUNK = 100
 BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
 WINDOW_MINUTES = 15       # poll mode: a spike is the gain over this many minutes
 REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
-SPIKE_PCT = 0.05          # poll mode: alert when the gain over WINDOW_MINUTES reaches this (gains only)
+SPIKE_PCT = 0.05          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
+POLL_INTERVAL_SECONDS = 300
+POLL_SETTLE_SECONDS = 10  # wait this long after each 5-minute boundary so the latest bars are published
+MAX_WAIT_FOR_OPEN_SECONDS = 3600  # loop mode: wait for the open only if it is this close, else exit
 REALERT_STEP = 0.05       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
 POLL_COOLDOWN_MINUTES = 30
 STALE_TRADE_MINUTES = 10  # ignore symbols whose last IEX trade is older than this
@@ -321,13 +325,14 @@ def check_spikes(snapshots, refs, state, now):
         if now - trade_ts > timedelta(minutes=STALE_TRADE_MINUTES):
             continue
         pct = price / ref[0] - 1.0
-        if pct < SPIKE_PCT:
+        if abs(pct) < SPIKE_PCT:
             continue
         prev = last.get(symbol)
         if prev is not None:
             prev_ts = parse_ts(prev["t"])
             recent = prev_ts is not None and now - prev_ts < timedelta(minutes=POLL_COOLDOWN_MINUTES)
-            if recent and pct - prev["pct"] < REALERT_STEP:
+            same_side = (prev["pct"] > 0) == (pct > 0)
+            if recent and same_side and abs(pct) - abs(prev["pct"]) < REALERT_STEP:
                 continue
         last[symbol] = {"pct": pct, "t": now.isoformat()}
         alerts.append(PriceAlert(symbol, price, ref[0], pct, trade.get("t", ""), ref[1]))
@@ -335,12 +340,12 @@ def check_spikes(snapshots, refs, state, now):
 
 
 def format_poll_push(alerts):
-    alerts = sorted(alerts, key=lambda a: a.pct, reverse=True)
+    alerts = sorted(alerts, key=lambda a: abs(a.pct), reverse=True)
     lines = [f"{a.symbol} {a.pct:+.1%} in {WINDOW_MINUTES}m to {a.price:.2f} (was {a.ref_price:.2f})"
              for a in alerts[:MAX_ALERTS_IN_PUSH]]
     if len(alerts) > MAX_ALERTS_IN_PUSH:
         lines.append(f"+{len(alerts) - MAX_ALERTS_IN_PUSH} more")
-    title = f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} up {SPIKE_PCT:.0%}+ in {WINDOW_MINUTES}m"
+    title = f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} moved {SPIKE_PCT:.0%}+ in {WINDOW_MINUTES}m"
     return title, "\n".join(lines)
 
 
@@ -390,12 +395,49 @@ def append_poll_log(alerts, now):
     POLL_LOG.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
 
+def market_clock():
+    """Returns (is_open, seconds_until_next_open); falls back to fixed hours if Alpaca's clock is unreachable."""
+    try:
+        from alpaca.trading.client import TradingClient
+        clock = TradingClient(os.environ[ALPACA_KEY_ENV], os.environ[ALPACA_SECRET_ENV], paper=True).get_clock()
+        return clock.is_open, (clock.next_open - clock.timestamp).total_seconds()
+    except Exception as exc:
+        print(f"clock check failed ({exc}), using fixed hours")
+        return in_market_hours(), 0 if in_market_hours() else 86400
+
+
+def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
+    """Polls every 5 minutes inside one process; stops at until_et, after max_minutes, or when the market is shut."""
+    started = time.time()
+    notifier = Notifier(os.environ[NTFY_TOPIC_ENV])
+    symbols = load_universe()
+    print(f"Loop started: {len(symbols)} symbols, stop at {until_et} ET or after {max_minutes} min")
+    while time.time() - started < max_minutes * 60 and seconds_until(until_et) > 0:
+        is_open, to_open = market_clock()
+        if not is_open:
+            if to_open > MAX_WAIT_FOR_OPEN_SECONDS:
+                print("Market shut and next open is far away, exiting")
+                return
+            time.sleep(min(to_open + 1, 60))
+            continue
+        try:
+            run_poll_once(symbols, notifier)
+        except Exception as exc:
+            print(f"poll failed, will retry next cycle: {exc}")
+        sys.stdout.flush()
+        time.sleep(POLL_INTERVAL_SECONDS - time.time() % POLL_INTERVAL_SECONDS + POLL_SETTLE_SECONDS)
+    print("Loop finished")
+
+
 def run_poll(force=False):
     if not force and not market_is_open():
         print("Market closed")
         return
+    run_poll_once(load_universe(), Notifier(os.environ[NTFY_TOPIC_ENV]))
+
+
+def run_poll_once(symbols, notifier):
     now = datetime.now(timezone.utc)
-    symbols = load_universe()
     snapshots = fetch_snapshots(symbols)
     refs = fetch_reference_prices(symbols, now)
     usable = sum(1 for sym, s in snapshots.items() if (s or {}).get("latestTrade") and sym in refs)
@@ -409,7 +451,7 @@ def run_poll(force=False):
     append_poll_log(alerts, now)
     title, body = format_poll_push(alerts)
     print(f"{title}\n{body}")
-    Notifier(os.environ[NTFY_TOPIC_ENV]).push(title, body, high=True)
+    notifier.push(title, body, high=True)
 
 
 def main():
@@ -418,7 +460,12 @@ def main():
         print(__doc__)
         return
     if args[0] == "poll":
-        run_poll(force="--force" in args)
+        if "--loop" in args:
+            until = dtime.fromisoformat(args[args.index("--until") + 1]) if "--until" in args else MARKET_CLOSE
+            minutes = int(args[args.index("--max-minutes") + 1]) if "--max-minutes" in args else 335
+            run_poll_loop(until, minutes)
+        else:
+            run_poll(force="--force" in args)
         return
     if args[0] == "replay":
         day = date.fromisoformat(args[1]) if len(args) > 1 else date.today() - timedelta(days=1)

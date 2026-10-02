@@ -71,10 +71,20 @@ def refs_for(**closes):
     return {sym: (close, "2026-09-30T19:30:00Z") for sym, close in closes.items()}
 
 
-def test_poll_alerts_on_gains_over_window_only():
-    snaps = {"UP": snap(106), "EDGE": snap(104), "DN": snap(80)}
-    alerts, _ = sd.check_spikes(snaps, refs_for(UP=100, EDGE=100, DN=100), {}, NOW)
-    assert [a.symbol for a in alerts] == ["UP"] and round(alerts[0].pct, 2) == 0.06
+def test_poll_alerts_on_moves_up_and_down_over_window():
+    snaps = {"UP": snap(106), "EDGE": snap(104), "SMALLDN": snap(97), "DN": snap(90)}
+    alerts, _ = sd.check_spikes(snaps, refs_for(UP=100, EDGE=100, SMALLDN=100, DN=100), {}, NOW)
+    assert sorted(a.symbol for a in alerts) == ["DN", "UP"]
+    assert {a.symbol: round(a.pct, 2) for a in alerts} == {"UP": 0.06, "DN": -0.10}
+
+
+def test_poll_drop_cooldown_and_direction_flip():
+    refs = refs_for(X=100)
+    first, state = sd.check_spikes({"X": snap(94)}, refs, {}, NOW)
+    again, state = sd.check_spikes({"X": snap(93, "2026-09-30T19:49:30Z")}, refs, state, NOW + timedelta(minutes=5))
+    deeper, state = sd.check_spikes({"X": snap(88, "2026-09-30T19:54:30Z")}, refs, state, NOW + timedelta(minutes=10))
+    flipped, _ = sd.check_spikes({"X": snap(106, "2026-09-30T19:59:30Z")}, refs, state, NOW + timedelta(minutes=15))
+    assert len(first) == 1 and again == [] and len(deeper) == 1 and len(flipped) == 1
 
 
 def test_poll_skips_missing_reference_stale_trade_and_bad_data():
@@ -108,7 +118,9 @@ def test_poll_state_resets_next_day():
 def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
     alerts, _ = sd.check_spikes({"X": snap(140)}, refs_for(X=100), {}, NOW)
     title, body = sd.format_poll_push(alerts)
-    assert title == "1 stock up 5%+ in 15m" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
+    assert title == "1 stock moved 5%+ in 15m" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
+    drops, _ = sd.check_spikes({"Y": snap(90)}, refs_for(Y=100), {}, NOW)
+    assert "Y -10.0% in 15m to 90.00 (was 100.00)" in sd.format_poll_push(drops)[1]
     monkeypatch.setattr(sd, "POLL_LOG", tmp_path / "alerts" / "poll_alerts.json")
     sd.append_poll_log(alerts, NOW)
     sd.append_poll_log(alerts, NOW)

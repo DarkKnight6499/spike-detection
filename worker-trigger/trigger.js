@@ -1,8 +1,9 @@
-// Starts a one-shot spike poll every 5 minutes in market hours; GitHub's own cron is too slow.
+// Optional extra starter for the spike poller; GitHub's own schedule in spikes.yml is the main one.
+// The poller is a long-running loop, so only the two segment starts need dispatching.
 const REPO = "DarkKnight6499/spike-detection";
 const DISPATCH = `https://api.github.com/repos/${REPO}/actions/workflows/spikes.yml/dispatches`;
-const OPEN_MIN = 9 * 60 + 30;    // ET window; the cron covers both UTC offsets, this gate keeps it DST-safe
-const CLOSE_MIN = 16 * 60;
+const SLOTS = [9 * 60 + 25, 14 * 60 + 50];   // ET minutes of day; the cron covers both UTC offsets, this gate keeps it DST-safe
+const SLACK_MINUTES = 8;
 
 async function ntfy(env, title, message) {
   if (!env.NTFY_TOPIC) return;
@@ -39,7 +40,6 @@ export default {
   async scheduled(event, env, ctx) {
     const { minutes, weekday } = etNow();
     if (weekday === "Sat" || weekday === "Sun") return;
-    if (minutes < OPEN_MIN || minutes > CLOSE_MIN) return;
-    ctx.waitUntil(dispatch(env));
+    if (SLOTS.some((slot) => Math.abs(minutes - slot) <= SLACK_MINUTES)) ctx.waitUntil(dispatch(env));
   },
 };
