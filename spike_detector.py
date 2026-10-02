@@ -1,7 +1,7 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on gains of 5%+ vs previous close (run every 5 min)
+    py spike_detector.py poll                 # one-shot: alert on gains of 5%+ over the last 15 minutes (run every 5 min)
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
 Env vars: ALPACA_KEY, ALPACA_SECRET, NTFY_TOPIC (live mode only).
@@ -16,7 +16,7 @@ import sys
 import time
 from collections import deque
 from dataclasses import dataclass
-from datetime import date, datetime, time as dtime, timedelta
+from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -54,9 +54,13 @@ HIST_CHUNK = 100          # symbols per historical request
 
 SNAPSHOT_URL = "https://data.alpaca.markets/v2/stocks/snapshots"
 SNAPSHOT_CHUNK = 100
-SPIKE_PCT = 0.05          # poll mode: alert when price is this far ABOVE the previous close (gains only)
-REALERT_STEP = 0.05       # poll mode: re-alert only after the move extends by this much
-SPLIT_CHECK_PCT = 0.30    # moves this large are tagged for a split check
+BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
+WINDOW_MINUTES = 15       # poll mode: a spike is the gain over this many minutes
+REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
+SPIKE_PCT = 0.05          # poll mode: alert when the gain over WINDOW_MINUTES reaches this (gains only)
+REALERT_STEP = 0.05       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
+POLL_COOLDOWN_MINUTES = 30
+STALE_TRADE_MINUTES = 10  # ignore symbols whose last IEX trade is older than this
 POLL_STATE = BASE_DIR / "alert_state.json"
 POLL_LOG = BASE_DIR / "alerts" / "poll_alerts.json"   # tracked in git; the workflow commits it
 
@@ -290,48 +294,64 @@ async def run_live(force=False, until_et=MARKET_CLOSE):
 class PriceAlert:
     symbol: str
     price: float
-    prev_close: float
+    ref_price: float
     pct: float
     trade_time: str
+    ref_time: str
 
 
-def check_spikes(snapshots, state, today):
-    """Pure core of poll mode: returns (alerts, new_state); state maps symbol to last alerted pct for today."""
-    levels = dict(state.get("levels", {})) if state.get("date") == today else {}
+def parse_ts(text):
+    try:
+        return datetime.fromisoformat(text)
+    except (TypeError, ValueError):
+        return None
+
+
+def check_spikes(snapshots, refs, state, now):
+    """Pure core of poll mode. refs maps symbol to (close, time) about WINDOW_MINUTES ago; state holds last alerts for today."""
+    today = now.astimezone(ET).date().isoformat()
+    last = dict(state.get("last", {})) if state.get("date") == today else {}
     alerts = []
     for symbol, snap in snapshots.items():
         trade = (snap or {}).get("latestTrade") or {}
-        prev = (snap or {}).get("prevDailyBar") or {}
-        price, prev_close = trade.get("p"), prev.get("c")
-        if not price or not prev_close:
+        price, ref = trade.get("p"), refs.get(symbol)
+        trade_ts = parse_ts(trade.get("t"))
+        if not price or not ref or trade_ts is None:
             continue
-        pct = price / prev_close - 1.0
+        if now - trade_ts > timedelta(minutes=STALE_TRADE_MINUTES):
+            continue
+        pct = price / ref[0] - 1.0
         if pct < SPIKE_PCT:
             continue
-        last = levels.get(symbol)
-        if last is not None and pct - last < REALERT_STEP:
-            continue
-        levels[symbol] = pct
-        alerts.append(PriceAlert(symbol, price, prev_close, pct, trade.get("t", "")))
-    return alerts, {"date": today, "levels": levels}
+        prev = last.get(symbol)
+        if prev is not None:
+            prev_ts = parse_ts(prev["t"])
+            recent = prev_ts is not None and now - prev_ts < timedelta(minutes=POLL_COOLDOWN_MINUTES)
+            if recent and pct - prev["pct"] < REALERT_STEP:
+                continue
+        last[symbol] = {"pct": pct, "t": now.isoformat()}
+        alerts.append(PriceAlert(symbol, price, ref[0], pct, trade.get("t", ""), ref[1]))
+    return alerts, {"date": today, "last": last}
 
 
 def format_poll_push(alerts):
-    alerts = sorted(alerts, key=lambda a: abs(a.pct), reverse=True)
-    lines = []
-    for a in alerts[:MAX_ALERTS_IN_PUSH]:
-        tag = " (check split)" if abs(a.pct) >= SPLIT_CHECK_PCT else ""
-        lines.append(f"{a.symbol} {a.pct:+.1%} to {a.price:.2f} (prev close {a.prev_close:.2f}){tag}")
+    alerts = sorted(alerts, key=lambda a: a.pct, reverse=True)
+    lines = [f"{a.symbol} {a.pct:+.1%} in {WINDOW_MINUTES}m to {a.price:.2f} (was {a.ref_price:.2f})"
+             for a in alerts[:MAX_ALERTS_IN_PUSH]]
     if len(alerts) > MAX_ALERTS_IN_PUSH:
         lines.append(f"+{len(alerts) - MAX_ALERTS_IN_PUSH} more")
-    return f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} up {SPIKE_PCT:.0%}+", "\n".join(lines)
+    title = f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} up {SPIKE_PCT:.0%}+ in {WINDOW_MINUTES}m"
+    return title, "\n".join(lines)
+
+
+def alpaca_headers():
+    return {"APCA-API-KEY-ID": os.environ[ALPACA_KEY_ENV], "APCA-API-SECRET-KEY": os.environ[ALPACA_SECRET_ENV]}
 
 
 def fetch_snapshots(symbols):
-    headers = {"APCA-API-KEY-ID": os.environ[ALPACA_KEY_ENV], "APCA-API-SECRET-KEY": os.environ[ALPACA_SECRET_ENV]}
     out = {}
     for i in range(0, len(symbols), SNAPSHOT_CHUNK):
-        resp = requests.get(SNAPSHOT_URL, headers=headers, timeout=30,
+        resp = requests.get(SNAPSHOT_URL, headers=alpaca_headers(), timeout=30,
                             params={"symbols": ",".join(symbols[i:i + SNAPSHOT_CHUNK]), "feed": "iex"})
         resp.raise_for_status()
         data = resp.json()
@@ -339,11 +359,34 @@ def fetch_snapshots(symbols):
     return out
 
 
+def fetch_reference_prices(symbols, now):
+    """Last 1-minute bar at or before now - WINDOW_MINUTES, looking back at most REF_LOOKBACK_MINUTES."""
+    start = (now - timedelta(minutes=REF_LOOKBACK_MINUTES)).isoformat()
+    end = (now - timedelta(minutes=WINDOW_MINUTES)).isoformat()
+    refs = {}
+    for i in range(0, len(symbols), SNAPSHOT_CHUNK):
+        params = {"symbols": ",".join(symbols[i:i + SNAPSHOT_CHUNK]), "timeframe": "1Min", "start": start,
+                  "end": end, "feed": "iex", "limit": 10000, "adjustment": "raw"}
+        while True:
+            resp = requests.get(BARS_URL, headers=alpaca_headers(), timeout=30, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            for symbol, bars in (data.get("bars") or {}).items():
+                if bars:
+                    refs[symbol] = (bars[-1]["c"], bars[-1]["t"])
+            token = data.get("next_page_token")
+            if not token:
+                break
+            params["page_token"] = token
+    return refs
+
+
 def append_poll_log(alerts, now):
     POLL_LOG.parent.mkdir(exist_ok=True)
     history = json.loads(POLL_LOG.read_text(encoding="utf-8")) if POLL_LOG.exists() else []
-    history.extend({"time_et": now.isoformat(), "symbol": a.symbol, "pct_from_prev_close": round(a.pct, 4),
-                    "price": a.price, "prev_close": a.prev_close, "trade_time": a.trade_time} for a in alerts)
+    history.extend({"time_et": now.astimezone(ET).isoformat(), "symbol": a.symbol, "pct_change": round(a.pct, 4),
+                    "window_minutes": WINDOW_MINUTES, "price": a.price, "ref_price": a.ref_price,
+                    "ref_time": a.ref_time, "trade_time": a.trade_time} for a in alerts)
     POLL_LOG.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
 
@@ -351,18 +394,19 @@ def run_poll(force=False):
     if not force and not market_is_open():
         print("Market closed")
         return
+    now = datetime.now(timezone.utc)
     symbols = load_universe()
     snapshots = fetch_snapshots(symbols)
-    usable = sum(1 for s in snapshots.values() if (s or {}).get("latestTrade") and (s or {}).get("prevDailyBar"))
-    print(f"{len(snapshots)} snapshots, {usable} usable of {len(symbols)} symbols")
-    today = datetime.now(ET).date().isoformat()
+    refs = fetch_reference_prices(symbols, now)
+    usable = sum(1 for sym, s in snapshots.items() if (s or {}).get("latestTrade") and sym in refs)
+    print(f"{len(snapshots)} snapshots, {len(refs)} reference prices, {usable} usable of {len(symbols)} symbols")
     state = json.loads(POLL_STATE.read_text()) if POLL_STATE.exists() else {}
-    alerts, new_state = check_spikes(snapshots, state, today)
+    alerts, new_state = check_spikes(snapshots, refs, state, now)
     POLL_STATE.write_text(json.dumps(new_state))
     if not alerts:
         print("No spikes")
         return
-    append_poll_log(alerts, datetime.now(ET))
+    append_poll_log(alerts, now)
     title, body = format_poll_push(alerts)
     print(f"{title}\n{body}")
     Notifier(os.environ[NTFY_TOPIC_ENV]).push(title, body, high=True)

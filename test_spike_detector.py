@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, timezone
 
 import spike_detector as sd
@@ -58,39 +59,58 @@ def test_format_push_caps_lines():
     assert title == "12 spikes" and body.count("\n") == sd.MAX_ALERTS_IN_PUSH and body.endswith("+4 more")
 
 
-def snap(price, prev):
-    return {"latestTrade": {"p": price, "t": "2026-09-30T14:00:00Z"}, "prevDailyBar": {"c": prev}}
+NOW = datetime(2026, 9, 30, 19, 45, tzinfo=timezone.utc)
+TRADE_T = "2026-09-30T19:44:30.123456789Z"
 
 
-def test_poll_alerts_on_gains_of_five_percent_only():
-    snaps = {"UP": snap(106, 100), "EDGE": snap(104, 100), "DN": snap(80, 100)}
-    alerts, _ = sd.check_spikes(snaps, {}, "2026-09-30")
-    assert [a.symbol for a in alerts] == ["UP"]
+def snap(price, trade_t=TRADE_T):
+    return {"latestTrade": {"p": price, "t": trade_t}}
 
 
-def test_poll_dedupes_until_gain_extends():
-    first, state = sd.check_spikes({"UP": snap(106, 100)}, {}, "2026-09-30")
-    again, state = sd.check_spikes({"UP": snap(108, 100)}, state, "2026-09-30")
-    extended, state = sd.check_spikes({"UP": snap(112, 100)}, state, "2026-09-30")
-    assert len(first) == 1 and again == [] and len(extended) == 1
+def refs_for(**closes):
+    return {sym: (close, "2026-09-30T19:30:00Z") for sym, close in closes.items()}
 
 
-def test_poll_state_resets_next_day_and_handles_missing_data():
-    _, state = sd.check_spikes({"UP": snap(106, 100)}, {}, "2026-09-30")
-    nxt, _ = sd.check_spikes({"UP": snap(106, 100), "BAD": {"latestTrade": None}, "NONE": None}, state, "2026-10-01")
-    assert [a.symbol for a in nxt] == ["UP"]
+def test_poll_alerts_on_gains_over_window_only():
+    snaps = {"UP": snap(106), "EDGE": snap(104), "DN": snap(80)}
+    alerts, _ = sd.check_spikes(snaps, refs_for(UP=100, EDGE=100, DN=100), {}, NOW)
+    assert [a.symbol for a in alerts] == ["UP"] and round(alerts[0].pct, 2) == 0.06
 
 
-def test_poll_push_title_and_split_tag():
-    alerts, _ = sd.check_spikes({"X": snap(140, 100)}, {}, "2026-09-30")
+def test_poll_skips_missing_reference_stale_trade_and_bad_data():
+    snaps = {"NOREF": snap(110), "STALE": snap(110, "2026-09-30T19:00:00Z"), "BAD": {"latestTrade": None}, "NONE": None}
+    alerts, _ = sd.check_spikes(snaps, refs_for(STALE=100, BAD=100, NONE=100), {}, NOW)
+    assert alerts == []
+
+
+def test_poll_cooldown_suppresses_repeat_then_allows_after_expiry():
+    refs = refs_for(UP=100)
+    first, state = sd.check_spikes({"UP": snap(106)}, refs, {}, NOW)
+    soon, state = sd.check_spikes({"UP": snap(107)}, refs, state, NOW + timedelta(minutes=5))
+    later, state = sd.check_spikes({"UP": snap(107, "2026-09-30T20:14:30Z")}, refs, state, NOW + timedelta(minutes=31))
+    assert len(first) == 1 and soon == [] and len(later) == 1
+
+
+def test_poll_realerts_inside_cooldown_when_gain_grows():
+    refs = refs_for(UP=100)
+    _, state = sd.check_spikes({"UP": snap(106)}, refs, {}, NOW)
+    grown, _ = sd.check_spikes({"UP": snap(112, "2026-09-30T19:49:30Z")}, refs, state, NOW + timedelta(minutes=5))
+    assert len(grown) == 1
+
+
+def test_poll_state_resets_next_day():
+    _, state = sd.check_spikes({"UP": snap(106)}, refs_for(UP=100), {}, NOW)
+    next_day = NOW + timedelta(days=1)
+    alerts, _ = sd.check_spikes({"UP": snap(106, "2026-10-01T19:44:30Z")}, refs_for(UP=100), state, next_day)
+    assert len(alerts) == 1
+
+
+def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
+    alerts, _ = sd.check_spikes({"X": snap(140)}, refs_for(X=100), {}, NOW)
     title, body = sd.format_poll_push(alerts)
-    assert title == "1 stock up 5%+" and "check split" in body
-
-
-def test_poll_log_appends_json(tmp_path, monkeypatch):
+    assert title == "1 stock up 5%+ in 15m" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
     monkeypatch.setattr(sd, "POLL_LOG", tmp_path / "alerts" / "poll_alerts.json")
-    alerts, _ = sd.check_spikes({"UP": snap(106, 100)}, {}, "2026-09-30")
-    sd.append_poll_log(alerts, T0)
-    sd.append_poll_log(alerts, T0)
-    rows = __import__("json").loads(sd.POLL_LOG.read_text())
-    assert len(rows) == 2 and rows[0]["symbol"] == "UP" and rows[0]["pct_from_prev_close"] == 0.06
+    sd.append_poll_log(alerts, NOW)
+    sd.append_poll_log(alerts, NOW)
+    rows = json.loads(sd.POLL_LOG.read_text())
+    assert len(rows) == 2 and rows[0]["symbol"] == "X" and rows[0]["window_minutes"] == 15 and rows[0]["pct_change"] == 0.4
