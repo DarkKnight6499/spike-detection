@@ -58,14 +58,15 @@ SNAPSHOT_URL = "https://data.alpaca.markets/v2/stocks/snapshots"
 SNAPSHOT_CHUNK = 100
 BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
 WINDOW_MINUTES = 15       # poll mode: main window, equals the simulator delay so the move is the gain vs its stale price
+FAST_SPIKE_PCT = 0.02    # poll mode: the fast window needs a bigger move
 FAST_WINDOW_MINUTES = 2   # poll mode: second window that catches sharp moves right away
 FAST_REF_LOOKBACK_MINUTES = 5
 REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
-SPIKE_PCT = 0.02          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
+SPIKE_PCT = 0.01          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
 POLL_INTERVAL_SECONDS = 60
 POLL_SETTLE_SECONDS = 5   # wait this long after each boundary so the latest bars are published
 MAX_WAIT_FOR_OPEN_SECONDS = 3600  # loop mode: wait for the open only if it is this close, else exit
-REALERT_STEP = 0.02       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
+REALERT_STEP = 0.01       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
 POLL_COOLDOWN_MINUTES = 15
 HEARTBEAT_EVERY_CYCLES = 60  # loop mode: low-priority "still running" push roughly hourly
 MAX_CONSECUTIVE_FAILURES = 3  # loop mode: push an error alert after this many failed polls in a row
@@ -337,11 +338,13 @@ def check_spikes(snapshots, refs, state, now):
             continue
         if isinstance(ref_set, tuple):
             ref_set = {WINDOW_MINUTES: ref_set}
-        # take the window with the biggest move
-        window, ref = max(ref_set.items(), key=lambda item: abs(price / item[1][0] - 1.0))
-        pct = price / ref[0] - 1.0
-        if abs(pct) < SPIKE_PCT:
+        # each window has its own threshold; report the window with the biggest qualifying move
+        hits = [(w, r) for w, r in ref_set.items()
+                if abs(price / r[0] - 1.0) >= (FAST_SPIKE_PCT if w == FAST_WINDOW_MINUTES else SPIKE_PCT)]
+        if not hits:
             continue
+        window, ref = max(hits, key=lambda item: abs(price / item[1][0] - 1.0))
+        pct = price / ref[0] - 1.0
         prev = last.get(symbol)
         if prev is not None:
             prev_ts = parse_ts(prev["t"])

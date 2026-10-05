@@ -72,7 +72,7 @@ def refs_for(**closes):
 
 
 def test_poll_alerts_on_moves_up_and_down_over_window():
-    snaps = {"UP": snap(106), "EDGE": snap(101.9), "SMALLDN": snap(98.1), "DN": snap(90)}
+    snaps = {"UP": snap(106), "EDGE": snap(100.9), "SMALLDN": snap(99.1), "DN": snap(90)}
     alerts, _ = sd.check_spikes(snaps, refs_for(UP=100, EDGE=100, SMALLDN=100, DN=100), {}, NOW)
     assert sorted(a.symbol for a in alerts) == ["DN", "UP"]
     assert {a.symbol: round(a.pct, 2) for a in alerts} == {"UP": 0.06, "DN": -0.10}
@@ -96,7 +96,7 @@ def test_poll_skips_missing_reference_stale_trade_and_bad_data():
 def test_poll_cooldown_suppresses_repeat_then_allows_after_expiry():
     refs = refs_for(UP=100)
     first, state = sd.check_spikes({"UP": snap(106)}, refs, {}, NOW)
-    soon, state = sd.check_spikes({"UP": snap(107)}, refs, state, NOW + timedelta(minutes=5))
+    soon, state = sd.check_spikes({"UP": snap(106.5)}, refs, state, NOW + timedelta(minutes=5))
     later, state = sd.check_spikes({"UP": snap(107, "2026-09-30T20:14:30Z")}, refs, state, NOW + timedelta(minutes=31))
     assert len(first) == 1 and soon == [] and len(later) == 1
 
@@ -118,7 +118,7 @@ def test_poll_state_resets_next_day():
 def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
     alerts, _ = sd.check_spikes({"X": snap(140)}, refs_for(X=100), {}, NOW)
     title, body = sd.format_poll_push(alerts)
-    assert title == "1 stock moved 2%+ (stale sim price = 'was')" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
+    assert title == "1 stock moved 1%+ (stale sim price = 'was')" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
     drops, _ = sd.check_spikes({"Y": snap(90)}, refs_for(Y=100), {}, NOW)
     assert "Y -10.0% in 15m to 90.00 (was 100.00)" in sd.format_poll_push(drops)[1]
     monkeypatch.setattr(sd, "POLL_LOG", tmp_path / "alerts" / "poll_alerts.json")
@@ -132,5 +132,13 @@ def test_poll_fast_window_catches_sharp_move_the_slow_window_misses():
     refs = {"X": {15: (100.0, "a"), 2: (102.0, "b")}}
     alerts, _ = sd.check_spikes({"X": snap(99.0)}, refs, {}, NOW)
     assert len(alerts) == 1 and alerts[0].window == 2 and round(alerts[0].pct, 3) == -0.029
-    quiet, _ = sd.check_spikes({"X": snap(101.0)}, refs, {}, NOW)
+    quiet, _ = sd.check_spikes({"X": snap(100.5)}, refs, {}, NOW)
     assert quiet == []
+
+
+def test_poll_fast_window_needs_2_percent_but_slow_needs_1():
+    refs = {"X": {15: (100.0, "a"), 2: (100.0, "b")}}
+    assert sd.check_spikes({"X": snap(101.5)}, refs, {}, NOW)[0][0].window == 15
+    only_fast = {"X": {2: (100.0, "b")}}
+    assert sd.check_spikes({"X": snap(101.5)}, only_fast, {}, NOW)[0] == []
+    assert sd.check_spikes({"X": snap(102.5)}, only_fast, {}, NOW)[0][0].window == 2
