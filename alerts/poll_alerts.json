@@ -102,5 +102,25 @@
     "price": 407.505,
     "prev_close": 387.83,
     "trade_time": "2026-10-01T19:51:06.486763454Z"
+  },
+  {
+    "time_et": "2026-10-05T14:37:01.211915-04:00",
+    "symbol": "CHRW",
+    "pct_change": -0.0106,
+    "window_minutes": 15,
+    "price": 140.48,
+    "ref_price": 141.98,
+    "ref_time": "2026-10-05T18:22:00Z",
+    "trade_time": "2026-10-05T18:35:23.039560833Z"
+  },
+  {
+    "time_et": "2026-10-05T14:38:16.210694-04:00",
+    "symbol": "CTVA",
+    "pct_change": -0.0108,
+    "window_minutes": 15,
+    "price": 12.4,
+    "ref_price": 12.535,
+    "ref_time": "2026-10-05T18:23:00Z",
+    "trade_time": "2026-10-05T18:38:13.433352238Z"
   }
 ]
