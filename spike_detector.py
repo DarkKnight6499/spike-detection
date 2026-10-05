@@ -2,7 +2,7 @@
 
 Usage (PowerShell):
     py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 15 minutes or 2 minutes
-    py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every minute in one process
+    py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every 15 seconds in one process
     py spike_detector.py notify-test          # send one test push to NTFY_TOPIC, exit 1 if ntfy rejects it
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
@@ -63,12 +63,12 @@ FAST_WINDOW_MINUTES = 2   # poll mode: second window that catches sharp moves ri
 FAST_REF_LOOKBACK_MINUTES = 5
 REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
 SPIKE_PCT = 0.01          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
-POLL_INTERVAL_SECONDS = 60
-POLL_SETTLE_SECONDS = 5   # wait this long after each boundary so the latest bars are published
+POLL_INTERVAL_SECONDS = 15
+POLL_SETTLE_SECONDS = 1   # small offset past each interval boundary
 MAX_WAIT_FOR_OPEN_SECONDS = 3600  # loop mode: wait for the open only if it is this close, else exit
 REALERT_STEP = 0.01       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
 POLL_COOLDOWN_MINUTES = 15
-HEARTBEAT_EVERY_CYCLES = 60  # loop mode: low-priority "still running" push roughly hourly
+HEARTBEAT_EVERY_CYCLES = 240 # loop mode: low-priority "still running" push roughly hourly
 MAX_CONSECUTIVE_FAILURES = 3  # loop mode: push an error alert after this many failed polls in a row
 STALE_TRADE_MINUTES = 10  # ignore symbols whose last IEX trade is older than this
 POLL_STATE = BASE_DIR / "alert_state.json"
@@ -429,7 +429,7 @@ def market_clock():
 
 
 def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
-    """Polls every minute inside one process; stops at until_et, after max_minutes, or when the market is shut."""
+    """Polls every 15 seconds inside one process; stops at until_et, after max_minutes, or when the market is shut."""
     started = time.time()
     notifier = Notifier(os.environ[NTFY_TOPIC_ENV])
     symbols = load_universe()
@@ -437,6 +437,7 @@ def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
     notifier.push("Spike detector running", f"Watching {len(symbols)} symbols, alert at {SPIKE_PCT:.0%}+ in {WINDOW_MINUTES}m",
                   status=True)
     cycles = failures = total_failures = 0
+    ref_cache = {}
     while time.time() - started < max_minutes * 60 and seconds_until(until_et) > 0:
         is_open, to_open = market_clock()
         if not is_open:
@@ -446,7 +447,7 @@ def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
             time.sleep(min(to_open + 1, 60))
             continue
         try:
-            run_poll_once(symbols, notifier)
+            run_poll_once(symbols, notifier, ref_cache)
             cycles += 1
             failures = 0
             if cycles % HEARTBEAT_EVERY_CYCLES == 0:
@@ -470,10 +471,17 @@ def run_poll(force=False):
     run_poll_once(load_universe(), Notifier(os.environ[NTFY_TOPIC_ENV]))
 
 
-def run_poll_once(symbols, notifier):
+def run_poll_once(symbols, notifier, ref_cache=None):
+    """ref_cache (loop mode) keeps reference bars for the current minute, since they only change once a minute."""
     now = datetime.now(timezone.utc)
     snapshots = fetch_snapshots(symbols)
-    refs = fetch_reference_prices(symbols, now)
+    minute = now.replace(second=0, microsecond=0)
+    if ref_cache is None or ref_cache.get("minute") != minute:
+        refs = fetch_reference_prices(symbols, now)
+        if ref_cache is not None:
+            ref_cache.update(minute=minute, refs=refs)
+    else:
+        refs = ref_cache["refs"]
     usable = sum(1 for sym, s in snapshots.items() if (s or {}).get("latestTrade") and sym in refs)
     print(f"{len(snapshots)} snapshots, {len(refs)} reference prices, {usable} usable of {len(symbols)} symbols")
     state = json.loads(POLL_STATE.read_text()) if POLL_STATE.exists() else {}
