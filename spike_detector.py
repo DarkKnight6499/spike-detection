@@ -1,8 +1,8 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 15 minutes
-    py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every 5 minutes in one process
+    py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 5 minutes
+    py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every minute in one process
     py spike_detector.py notify-test          # send one test push to NTFY_TOPIC, exit 1 if ntfy rejects it
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
@@ -48,7 +48,7 @@ COOLDOWN_MINUTES = 10     # per-ticker repeat suppression
 SKIP_FIRST_MINUTES = 3    # opening prints are noisy
 
 BATCH_SECONDS = 5         # merge alerts landing close together into one push
-MAX_PUSHES_PER_HOUR = 20
+MAX_PUSHES_PER_HOUR = 60
 MAX_ALERTS_IN_PUSH = 8
 
 SEED_MINUTES = 60         # history fetched at live start to warm the baselines
@@ -57,15 +57,15 @@ HIST_CHUNK = 100          # symbols per historical request
 SNAPSHOT_URL = "https://data.alpaca.markets/v2/stocks/snapshots"
 SNAPSHOT_CHUNK = 100
 BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
-WINDOW_MINUTES = 15       # poll mode: a spike is the gain over this many minutes
-REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
+WINDOW_MINUTES = 5        # poll mode: a spike is the gain over this many minutes
+REF_LOOKBACK_MINUTES = 15 # the reference bar must be WINDOW_MINUTES to this many minutes old
 SPIKE_PCT = 0.02          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
-POLL_INTERVAL_SECONDS = 300
-POLL_SETTLE_SECONDS = 10  # wait this long after each 5-minute boundary so the latest bars are published
+POLL_INTERVAL_SECONDS = 60
+POLL_SETTLE_SECONDS = 5   # wait this long after each boundary so the latest bars are published
 MAX_WAIT_FOR_OPEN_SECONDS = 3600  # loop mode: wait for the open only if it is this close, else exit
 REALERT_STEP = 0.02       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
-POLL_COOLDOWN_MINUTES = 30
-HEARTBEAT_EVERY_CYCLES = 12  # loop mode: low-priority "still running" push roughly hourly
+POLL_COOLDOWN_MINUTES = 15
+HEARTBEAT_EVERY_CYCLES = 60  # loop mode: low-priority "still running" push roughly hourly
 MAX_CONSECUTIVE_FAILURES = 3  # loop mode: push an error alert after this many failed polls in a row
 STALE_TRADE_MINUTES = 10  # ignore symbols whose last IEX trade is older than this
 POLL_STATE = BASE_DIR / "alert_state.json"
@@ -415,7 +415,7 @@ def market_clock():
 
 
 def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
-    """Polls every 5 minutes inside one process; stops at until_et, after max_minutes, or when the market is shut."""
+    """Polls every minute inside one process; stops at until_et, after max_minutes, or when the market is shut."""
     started = time.time()
     notifier = Notifier(os.environ[NTFY_TOPIC_ENV])
     symbols = load_universe()
