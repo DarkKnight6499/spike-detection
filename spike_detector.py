@@ -1,7 +1,7 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 5 minutes
+    py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 15 minutes or 2 minutes
     py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every minute in one process
     py spike_detector.py notify-test          # send one test push to NTFY_TOPIC, exit 1 if ntfy rejects it
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
@@ -57,8 +57,10 @@ HIST_CHUNK = 100          # symbols per historical request
 SNAPSHOT_URL = "https://data.alpaca.markets/v2/stocks/snapshots"
 SNAPSHOT_CHUNK = 100
 BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
-WINDOW_MINUTES = 5        # poll mode: a spike is the gain over this many minutes
-REF_LOOKBACK_MINUTES = 15 # the reference bar must be WINDOW_MINUTES to this many minutes old
+WINDOW_MINUTES = 15       # poll mode: main window, equals the simulator delay so the move is the gain vs its stale price
+FAST_WINDOW_MINUTES = 2   # poll mode: second window that catches sharp moves right away
+FAST_REF_LOOKBACK_MINUTES = 5
+REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
 SPIKE_PCT = 0.02          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
 POLL_INTERVAL_SECONDS = 60
 POLL_SETTLE_SECONDS = 5   # wait this long after each boundary so the latest bars are published
@@ -310,6 +312,7 @@ class PriceAlert:
     pct: float
     trade_time: str
     ref_time: str
+    window: int = WINDOW_MINUTES
 
 
 def parse_ts(text):
@@ -326,12 +329,16 @@ def check_spikes(snapshots, refs, state, now):
     alerts = []
     for symbol, snap in snapshots.items():
         trade = (snap or {}).get("latestTrade") or {}
-        price, ref = trade.get("p"), refs.get(symbol)
+        price, ref_set = trade.get("p"), refs.get(symbol)
         trade_ts = parse_ts(trade.get("t"))
-        if not price or not ref or trade_ts is None:
+        if not price or not ref_set or trade_ts is None:
             continue
         if now - trade_ts > timedelta(minutes=STALE_TRADE_MINUTES):
             continue
+        if isinstance(ref_set, tuple):
+            ref_set = {WINDOW_MINUTES: ref_set}
+        # take the window with the biggest move
+        window, ref = max(ref_set.items(), key=lambda item: abs(price / item[1][0] - 1.0))
         pct = price / ref[0] - 1.0
         if abs(pct) < SPIKE_PCT:
             continue
@@ -343,17 +350,17 @@ def check_spikes(snapshots, refs, state, now):
             if recent and same_side and abs(pct) - abs(prev["pct"]) < REALERT_STEP:
                 continue
         last[symbol] = {"pct": pct, "t": now.isoformat()}
-        alerts.append(PriceAlert(symbol, price, ref[0], pct, trade.get("t", ""), ref[1]))
+        alerts.append(PriceAlert(symbol, price, ref[0], pct, trade.get("t", ""), ref[1], window))
     return alerts, {"date": today, "last": last}
 
 
 def format_poll_push(alerts):
     alerts = sorted(alerts, key=lambda a: abs(a.pct), reverse=True)
-    lines = [f"{a.symbol} {a.pct:+.1%} in {WINDOW_MINUTES}m to {a.price:.2f} (was {a.ref_price:.2f})"
+    lines = [f"{a.symbol} {a.pct:+.1%} in {a.window}m to {a.price:.2f} (was {a.ref_price:.2f})"
              for a in alerts[:MAX_ALERTS_IN_PUSH]]
     if len(alerts) > MAX_ALERTS_IN_PUSH:
         lines.append(f"+{len(alerts) - MAX_ALERTS_IN_PUSH} more")
-    title = f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} moved {SPIKE_PCT:.0%}+ in {WINDOW_MINUTES}m"
+    title = f"{len(alerts)} stock{'s' if len(alerts) != 1 else ''} moved {SPIKE_PCT:.0%}+ (stale sim price = 'was')"
     return title, "\n".join(lines)
 
 
@@ -373,20 +380,24 @@ def fetch_snapshots(symbols):
 
 
 def fetch_reference_prices(symbols, now):
-    """Last 1-minute bar at or before now - WINDOW_MINUTES, looking back at most REF_LOOKBACK_MINUTES."""
+    """Per symbol {window_minutes: (close, time)}: last 1-minute bar at or before now - window, within that window's lookback."""
     start = (now - timedelta(minutes=REF_LOOKBACK_MINUTES)).isoformat()
-    end = (now - timedelta(minutes=WINDOW_MINUTES)).isoformat()
+    windows = {WINDOW_MINUTES: REF_LOOKBACK_MINUTES, FAST_WINDOW_MINUTES: FAST_REF_LOOKBACK_MINUTES}
     refs = {}
     for i in range(0, len(symbols), SNAPSHOT_CHUNK):
         params = {"symbols": ",".join(symbols[i:i + SNAPSHOT_CHUNK]), "timeframe": "1Min", "start": start,
-                  "end": end, "feed": "iex", "limit": 10000, "adjustment": "raw"}
+                  "end": (now - timedelta(minutes=FAST_WINDOW_MINUTES)).isoformat(), "feed": "iex", "limit": 10000,
+                  "adjustment": "raw"}
         while True:
             resp = requests.get(BARS_URL, headers=alpaca_headers(), timeout=30, params=params)
             resp.raise_for_status()
             data = resp.json()
             for symbol, bars in (data.get("bars") or {}).items():
-                if bars:
-                    refs[symbol] = (bars[-1]["c"], bars[-1]["t"])
+                for window, lookback in windows.items():
+                    cutoff, oldest = now - timedelta(minutes=window), now - timedelta(minutes=lookback)
+                    ok = [b for b in bars if oldest <= parse_ts(b["t"]) <= cutoff]
+                    if ok:
+                        refs.setdefault(symbol, {})[window] = (ok[-1]["c"], ok[-1]["t"])
             token = data.get("next_page_token")
             if not token:
                 break
@@ -398,7 +409,7 @@ def append_poll_log(alerts, now):
     POLL_LOG.parent.mkdir(exist_ok=True)
     history = json.loads(POLL_LOG.read_text(encoding="utf-8")) if POLL_LOG.exists() else []
     history.extend({"time_et": now.astimezone(ET).isoformat(), "symbol": a.symbol, "pct_change": round(a.pct, 4),
-                    "window_minutes": WINDOW_MINUTES, "price": a.price, "ref_price": a.ref_price,
+                    "window_minutes": a.window, "price": a.price, "ref_price": a.ref_price,
                     "ref_time": a.ref_time, "trade_time": a.trade_time} for a in alerts)
     POLL_LOG.write_text(json.dumps(history, indent=2), encoding="utf-8")
 

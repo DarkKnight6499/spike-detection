@@ -118,11 +118,19 @@ def test_poll_state_resets_next_day():
 def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
     alerts, _ = sd.check_spikes({"X": snap(140)}, refs_for(X=100), {}, NOW)
     title, body = sd.format_poll_push(alerts)
-    assert title == "1 stock moved 2%+ in 5m" and "X +40.0% in 5m to 140.00 (was 100.00)" in body
+    assert title == "1 stock moved 2%+ (stale sim price = 'was')" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
     drops, _ = sd.check_spikes({"Y": snap(90)}, refs_for(Y=100), {}, NOW)
-    assert "Y -10.0% in 5m to 90.00 (was 100.00)" in sd.format_poll_push(drops)[1]
+    assert "Y -10.0% in 15m to 90.00 (was 100.00)" in sd.format_poll_push(drops)[1]
     monkeypatch.setattr(sd, "POLL_LOG", tmp_path / "alerts" / "poll_alerts.json")
     sd.append_poll_log(alerts, NOW)
     sd.append_poll_log(alerts, NOW)
     rows = json.loads(sd.POLL_LOG.read_text())
-    assert len(rows) == 2 and rows[0]["symbol"] == "X" and rows[0]["window_minutes"] == 5 and rows[0]["pct_change"] == 0.4
+    assert len(rows) == 2 and rows[0]["symbol"] == "X" and rows[0]["window_minutes"] == 15 and rows[0]["pct_change"] == 0.4
+
+
+def test_poll_fast_window_catches_sharp_move_the_slow_window_misses():
+    refs = {"X": {15: (100.0, "a"), 2: (102.0, "b")}}
+    alerts, _ = sd.check_spikes({"X": snap(99.0)}, refs, {}, NOW)
+    assert len(alerts) == 1 and alerts[0].window == 2 and round(alerts[0].pct, 3) == -0.029
+    quiet, _ = sd.check_spikes({"X": snap(101.0)}, refs, {}, NOW)
+    assert quiet == []
