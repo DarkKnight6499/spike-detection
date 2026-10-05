@@ -3,6 +3,7 @@
 Usage (PowerShell):
     py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 15 minutes
     py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every 5 minutes in one process
+    py spike_detector.py notify-test          # send one test push to NTFY_TOPIC, exit 1 if ntfy rejects it
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
 Env vars: ALPACA_KEY, ALPACA_SECRET, NTFY_TOPIC (live mode only).
@@ -157,7 +158,7 @@ class Notifier:
         self.url = f"{NTFY_BASE_URL}/{topic}"
         self.sent = deque()
 
-    def push(self, title, body, high=False, status=False):
+    def push(self, title, body, high=False, status=False, tag=None):
         now = time.time()
         while self.sent and now - self.sent[0] > 3600:
             self.sent.popleft()
@@ -165,13 +166,17 @@ class Notifier:
             print("ntfy hourly cap reached, alert logged only")
             return
         try:
-            requests.post(self.url, data=body.encode("utf-8"), timeout=10,
-                          headers={"Title": title, "Priority": "high" if high else ("min" if status else "default"),
-                                   "Tags": "heartbeat" if status else "chart_with_upwards_trend"})
+            resp = requests.post(self.url, data=body.encode("utf-8"), timeout=10,
+                                 headers={"Title": title, "Priority": "high" if high else ("min" if status else "default"),
+                                          "Tags": "heartbeat" if status else (tag or "chart_with_upwards_trend")})
+            resp.raise_for_status()
+            print(f"ntfy sent ({resp.status_code}): {title}")
             if not status:
                 self.sent.append(now)
+            return True
         except requests.RequestException as exc:
-            print(f"ntfy failed: {exc}")
+            print(f"ntfy FAILED: {exc}")
+            return False
 
 
 def load_universe():
@@ -466,14 +471,18 @@ def run_poll_once(symbols, notifier):
     append_poll_log(alerts, now)
     title, body = format_poll_push(alerts)
     print(f"{title}\n{body}")
-    notifier.push(title, body, high=True)
+    tag = "chart_with_downwards_trend" if all(a.pct < 0 for a in alerts) else "chart_with_upwards_trend"
+    notifier.push(title, body, high=True, tag=tag)
 
 
 def main():
     args = sys.argv[1:]
-    if not args or args[0] not in ("live", "replay", "poll"):
+    if not args or args[0] not in ("live", "replay", "poll", "notify-test"):
         print(__doc__)
         return
+    if args[0] == "notify-test":
+        ok = Notifier(os.environ[NTFY_TOPIC_ENV]).push("Spike detector test", "If you see this, notifications work.", high=True)
+        sys.exit(0 if ok else 1)
     if args[0] == "poll":
         if "--loop" in args:
             until = dtime.fromisoformat(args[args.index("--until") + 1]) if "--until" in args else MARKET_CLOSE
