@@ -1,7 +1,7 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on moves of 5%+ (up or down) over the last 15 minutes
+    py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 15 minutes
     py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every 5 minutes in one process
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
     py spike_detector.py replay 2026-09-30    # run the detector over one historical day, no ntfy
@@ -58,12 +58,14 @@ SNAPSHOT_CHUNK = 100
 BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
 WINDOW_MINUTES = 15       # poll mode: a spike is the gain over this many minutes
 REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
-SPIKE_PCT = 0.05          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
+SPIKE_PCT = 0.02          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
 POLL_INTERVAL_SECONDS = 300
 POLL_SETTLE_SECONDS = 10  # wait this long after each 5-minute boundary so the latest bars are published
 MAX_WAIT_FOR_OPEN_SECONDS = 3600  # loop mode: wait for the open only if it is this close, else exit
-REALERT_STEP = 0.05       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
+REALERT_STEP = 0.02       # poll mode: inside the cooldown, re-alert only if the gain grew by this much
 POLL_COOLDOWN_MINUTES = 30
+HEARTBEAT_EVERY_CYCLES = 12  # loop mode: low-priority "still running" push roughly hourly
+MAX_CONSECUTIVE_FAILURES = 3  # loop mode: push an error alert after this many failed polls in a row
 STALE_TRADE_MINUTES = 10  # ignore symbols whose last IEX trade is older than this
 POLL_STATE = BASE_DIR / "alert_state.json"
 POLL_LOG = BASE_DIR / "alerts" / "poll_alerts.json"   # tracked in git; the workflow commits it
@@ -155,18 +157,19 @@ class Notifier:
         self.url = f"{NTFY_BASE_URL}/{topic}"
         self.sent = deque()
 
-    def push(self, title, body, high=False):
+    def push(self, title, body, high=False, status=False):
         now = time.time()
         while self.sent and now - self.sent[0] > 3600:
             self.sent.popleft()
-        if len(self.sent) >= MAX_PUSHES_PER_HOUR:
+        if not status and len(self.sent) >= MAX_PUSHES_PER_HOUR:
             print("ntfy hourly cap reached, alert logged only")
             return
         try:
             requests.post(self.url, data=body.encode("utf-8"), timeout=10,
-                          headers={"Title": title, "Priority": "high" if high else "default",
-                                   "Tags": "chart_with_upwards_trend"})
-            self.sent.append(now)
+                          headers={"Title": title, "Priority": "high" if high else ("min" if status else "default"),
+                                   "Tags": "heartbeat" if status else "chart_with_upwards_trend"})
+            if not status:
+                self.sent.append(now)
         except requests.RequestException as exc:
             print(f"ntfy failed: {exc}")
 
@@ -412,6 +415,9 @@ def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
     notifier = Notifier(os.environ[NTFY_TOPIC_ENV])
     symbols = load_universe()
     print(f"Loop started: {len(symbols)} symbols, stop at {until_et} ET or after {max_minutes} min")
+    notifier.push("Spike detector running", f"Watching {len(symbols)} symbols, alert at {SPIKE_PCT:.0%}+ in {WINDOW_MINUTES}m",
+                  status=True)
+    cycles = failures = total_failures = 0
     while time.time() - started < max_minutes * 60 and seconds_until(until_et) > 0:
         is_open, to_open = market_clock()
         if not is_open:
@@ -422,11 +428,20 @@ def run_poll_loop(until_et=MARKET_CLOSE, max_minutes=335):
             continue
         try:
             run_poll_once(symbols, notifier)
+            cycles += 1
+            failures = 0
+            if cycles % HEARTBEAT_EVERY_CYCLES == 0:
+                notifier.push("Spike detector OK", f"{cycles} polls done, {total_failures} failed", status=True)
         except Exception as exc:
+            failures += 1
+            total_failures += 1
             print(f"poll failed, will retry next cycle: {exc}")
+            if failures == MAX_CONSECUTIVE_FAILURES:
+                notifier.push("Spike detector FAILING", f"{failures} polls in a row failed: {exc}", high=True, status=True)
         sys.stdout.flush()
         time.sleep(POLL_INTERVAL_SECONDS - time.time() % POLL_INTERVAL_SECONDS + POLL_SETTLE_SECONDS)
-    print("Loop finished")
+    print(f"Loop finished: {cycles} polls, {total_failures} failed")
+    notifier.push("Spike detector stopped", f"{cycles} polls done, {total_failures} failed", status=True)
 
 
 def run_poll(force=False):

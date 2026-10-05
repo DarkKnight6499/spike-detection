@@ -72,7 +72,7 @@ def refs_for(**closes):
 
 
 def test_poll_alerts_on_moves_up_and_down_over_window():
-    snaps = {"UP": snap(106), "EDGE": snap(104), "SMALLDN": snap(97), "DN": snap(90)}
+    snaps = {"UP": snap(106), "EDGE": snap(101.9), "SMALLDN": snap(98.1), "DN": snap(90)}
     alerts, _ = sd.check_spikes(snaps, refs_for(UP=100, EDGE=100, SMALLDN=100, DN=100), {}, NOW)
     assert sorted(a.symbol for a in alerts) == ["DN", "UP"]
     assert {a.symbol: round(a.pct, 2) for a in alerts} == {"UP": 0.06, "DN": -0.10}
@@ -118,7 +118,7 @@ def test_poll_state_resets_next_day():
 def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
     alerts, _ = sd.check_spikes({"X": snap(140)}, refs_for(X=100), {}, NOW)
     title, body = sd.format_poll_push(alerts)
-    assert title == "1 stock moved 5%+ in 15m" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
+    assert title == "1 stock moved 2%+ in 15m" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
     drops, _ = sd.check_spikes({"Y": snap(90)}, refs_for(Y=100), {}, NOW)
     assert "Y -10.0% in 15m to 90.00 (was 100.00)" in sd.format_poll_push(drops)[1]
     monkeypatch.setattr(sd, "POLL_LOG", tmp_path / "alerts" / "poll_alerts.json")
