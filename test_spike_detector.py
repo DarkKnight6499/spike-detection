@@ -1,4 +1,6 @@
 import json
+
+import pytest
 from datetime import datetime, timedelta, timezone
 
 import spike_detector as sd
@@ -67,18 +69,23 @@ def snap(price, trade_t=TRADE_T):
     return {"latestTrade": {"p": price, "t": trade_t}}
 
 
+@pytest.fixture
+def drops_on(monkeypatch):
+    monkeypatch.setattr(sd, "ALERT_ON_DROPS", True)
+
+
 def refs_for(**closes):
     return {sym: (close, "2026-09-30T19:30:00Z") for sym, close in closes.items()}
 
 
-def test_poll_alerts_on_moves_up_and_down_over_window():
+def test_poll_alerts_on_moves_up_and_down_over_window(drops_on):
     snaps = {"UP": snap(106), "EDGE": snap(100.9), "SMALLDN": snap(99.1), "DN": snap(90)}
     alerts, _ = sd.check_spikes(snaps, refs_for(UP=100, EDGE=100, SMALLDN=100, DN=100), {}, NOW)
     assert sorted(a.symbol for a in alerts) == ["DN", "UP"]
     assert {a.symbol: round(a.pct, 2) for a in alerts} == {"UP": 0.06, "DN": -0.10}
 
 
-def test_poll_drop_cooldown_and_direction_flip():
+def test_poll_drop_cooldown_and_direction_flip(drops_on):
     refs = refs_for(X=100)
     first, state = sd.check_spikes({"X": snap(94)}, refs, {}, NOW)
     again, state = sd.check_spikes({"X": snap(93, "2026-09-30T19:49:30Z")}, refs, state, NOW + timedelta(minutes=5))
@@ -115,7 +122,7 @@ def test_poll_state_resets_next_day():
     assert len(alerts) == 1
 
 
-def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
+def test_poll_push_title_and_json_log(tmp_path, monkeypatch, drops_on):
     alerts, _ = sd.check_spikes({"X": snap(140)}, refs_for(X=100), {}, NOW)
     title, body = sd.format_poll_push(alerts)
     assert title == "1 stock moved 3%+ (stale sim price = 'was')" and "X +40.0% in 15m to 140.00 (was 100.00)" in body
@@ -128,7 +135,7 @@ def test_poll_push_title_and_json_log(tmp_path, monkeypatch):
     assert len(rows) == 2 and rows[0]["symbol"] == "X" and rows[0]["window_minutes"] == 15 and rows[0]["pct_change"] == 0.4
 
 
-def test_poll_fast_window_catches_sharp_move_the_slow_window_misses():
+def test_poll_fast_window_catches_sharp_move_the_slow_window_misses(drops_on):
     refs = {"X": {15: (100.0, "a"), 2: (104.0, "b")}}
     alerts, _ = sd.check_spikes({"X": snap(100.5)}, refs, {}, NOW)
     assert len(alerts) == 1 and alerts[0].window == 2 and round(alerts[0].pct, 3) == -0.034
@@ -136,8 +143,15 @@ def test_poll_fast_window_catches_sharp_move_the_slow_window_misses():
     assert quiet == []
 
 
-def test_poll_threshold_is_3_percent_in_both_windows():
+def test_poll_threshold_is_3_percent_in_both_windows(drops_on):
     both = {"X": {15: (100.0, "a"), 2: (100.0, "b")}}
     assert sd.check_spikes({"X": snap(102.9)}, both, {}, NOW)[0] == []
     assert sd.check_spikes({"X": snap(103.1)}, both, {}, NOW)[0][0].pct > 0.03
     assert sd.check_spikes({"X": snap(96.9)}, both, {}, NOW)[0][0].pct < -0.03
+
+
+def test_poll_gains_only_by_default():
+    both = {"X": {15: (100.0, "a"), 2: (100.0, "b")}}
+    assert sd.ALERT_ON_DROPS is False
+    assert sd.check_spikes({"X": snap(90.0)}, both, {}, NOW)[0] == []
+    assert sd.check_spikes({"X": snap(110.0)}, both, {}, NOW)[0][0].pct > 0.09

@@ -1,7 +1,7 @@
 """Real-time S&P 500 spike detector on Alpaca minute bars (free IEX feed) with ntfy push alerts.
 
 Usage (PowerShell):
-    py spike_detector.py poll                 # one-shot: alert on moves of 2%+ (up or down) over the last 15 minutes or 2 minutes
+    py spike_detector.py poll                 # one-shot: alert on gains of 3%+ over the last 15 minutes or 2 minutes (drops too if ALERT_ON_DROPS)
     py spike_detector.py poll --loop [--until 16:00] [--max-minutes 335]   # same check every 15 seconds in one process
     py spike_detector.py notify-test          # send one test push to NTFY_TOPIC, exit 1 if ntfy rejects it
     py spike_detector.py live [--until 14:55] # stream until the given ET time (default close), alert to ntfy
@@ -62,7 +62,8 @@ FAST_SPIKE_PCT = 0.03    # poll mode: the fast window needs a bigger move
 FAST_WINDOW_MINUTES = 2   # poll mode: second window that catches sharp moves right away
 FAST_REF_LOOKBACK_MINUTES = 5
 REF_LOOKBACK_MINUTES = 30 # the reference bar must be WINDOW_MINUTES to this many minutes old
-SPIKE_PCT = 0.03          # poll mode: alert when the move over WINDOW_MINUTES reaches this, up or down
+SPIKE_PCT = 0.03          # poll mode: alert when the move over WINDOW_MINUTES reaches this
+ALERT_ON_DROPS = False   # poll mode: gains only, no short-side alerts
 POLL_INTERVAL_SECONDS = 15
 POLL_SETTLE_SECONDS = 1   # small offset past each interval boundary
 MAX_WAIT_FOR_OPEN_SECONDS = 3600  # loop mode: wait for the open only if it is this close, else exit
@@ -340,7 +341,8 @@ def check_spikes(snapshots, refs, state, now):
             ref_set = {WINDOW_MINUTES: ref_set}
         # each window has its own threshold; report the window with the biggest qualifying move
         hits = [(w, r) for w, r in ref_set.items()
-                if abs(price / r[0] - 1.0) >= (FAST_SPIKE_PCT if w == FAST_WINDOW_MINUTES else SPIKE_PCT)]
+                if (abs(price / r[0] - 1.0) if ALERT_ON_DROPS else price / r[0] - 1.0)
+                >= (FAST_SPIKE_PCT if w == FAST_WINDOW_MINUTES else SPIKE_PCT)]
         if not hits:
             continue
         window, ref = max(hits, key=lambda item: abs(price / item[1][0] - 1.0))
