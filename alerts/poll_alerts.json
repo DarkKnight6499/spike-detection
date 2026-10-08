@@ -422,5 +422,45 @@
     "ref_price": 318.17,
     "ref_time": "2026-10-06T14:05:00Z",
     "trade_time": "2026-10-06T14:20:45.135322106Z"
+  },
+  {
+    "time_et": "2026-10-08T09:46:46.197974-04:00",
+    "symbol": "LITE",
+    "pct_change": 0.0313,
+    "window_minutes": 15,
+    "price": 1092.96,
+    "ref_price": 1059.82,
+    "ref_time": "2026-10-08T13:31:00Z",
+    "trade_time": "2026-10-08T13:46:46.058113324Z"
+  },
+  {
+    "time_et": "2026-10-08T09:48:31.197833-04:00",
+    "symbol": "CEG",
+    "pct_change": 0.0309,
+    "window_minutes": 15,
+    "price": 305.54,
+    "ref_price": 296.38,
+    "ref_time": "2026-10-08T13:33:00Z",
+    "trade_time": "2026-10-08T13:48:25.191833778Z"
+  },
+  {
+    "time_et": "2026-10-08T10:06:31.190709-04:00",
+    "symbol": "CMG",
+    "pct_change": 0.0677,
+    "window_minutes": 15,
+    "price": 33.12,
+    "ref_price": 31.02,
+    "ref_time": "2026-10-08T13:51:00Z",
+    "trade_time": "2026-10-08T14:06:31.191638339Z"
+  },
+  {
+    "time_et": "2026-10-08T10:22:01.200308-04:00",
+    "symbol": "SBUX",
+    "pct_change": 0.0458,
+    "window_minutes": 15,
+    "price": 92.7,
+    "ref_price": 88.64,
+    "ref_time": "2026-10-08T14:07:00Z",
+    "trade_time": "2026-10-08T14:22:00.999992362Z"
   }
 ]
