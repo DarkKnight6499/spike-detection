@@ -632,5 +632,45 @@
     "ref_price": 52.44,
     "ref_time": "2026-10-13T17:26:00Z",
     "trade_time": "2026-10-13T17:41:01.099330768Z"
+  },
+  {
+    "time_et": "2026-10-14T09:38:46.219271-04:00",
+    "symbol": "SKYD",
+    "pct_change": 0.0305,
+    "window_minutes": 2,
+    "price": 7.425,
+    "ref_price": 7.205,
+    "ref_time": "2026-10-14T13:36:00Z",
+    "trade_time": "2026-10-14T13:38:46.045576991Z"
+  },
+  {
+    "time_et": "2026-10-14T09:47:46.219590-04:00",
+    "symbol": "CRL",
+    "pct_change": 0.0318,
+    "window_minutes": 15,
+    "price": 307,
+    "ref_price": 297.525,
+    "ref_time": "2026-10-14T13:30:00Z",
+    "trade_time": "2026-10-14T13:47:43.033263051Z"
+  },
+  {
+    "time_et": "2026-10-14T10:16:16.224196-04:00",
+    "symbol": "SKYD",
+    "pct_change": 0.0307,
+    "window_minutes": 15,
+    "price": 7.04,
+    "ref_price": 6.83,
+    "ref_time": "2026-10-14T14:01:00Z",
+    "trade_time": "2026-10-14T14:16:16.708604189Z"
+  },
+  {
+    "time_et": "2026-10-14T10:32:46.221822-04:00",
+    "symbol": "FAST",
+    "pct_change": 0.0318,
+    "window_minutes": 15,
+    "price": 50.575,
+    "ref_price": 49.015,
+    "ref_time": "2026-10-14T14:17:00Z",
+    "trade_time": "2026-10-14T14:32:44.37258664Z"
   }
 ]
