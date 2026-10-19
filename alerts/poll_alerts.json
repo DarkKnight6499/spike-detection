@@ -822,5 +822,45 @@
     "ref_price": 87.85,
     "ref_time": "2026-10-15T15:06:00Z",
     "trade_time": "2026-10-15T15:21:29.965932598Z"
+  },
+  {
+    "time_et": "2026-10-19T09:32:46.040475-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.043,
+    "window_minutes": 2,
+    "price": 231.97,
+    "ref_price": 222.405,
+    "ref_time": "2026-10-19T13:30:00Z",
+    "trade_time": "2026-10-19T13:32:43.028840184Z"
+  },
+  {
+    "time_et": "2026-10-19T09:38:01.039692-04:00",
+    "symbol": "WDC",
+    "pct_change": 0.0321,
+    "window_minutes": 15,
+    "price": 354.72,
+    "ref_price": 343.7,
+    "ref_time": "2026-10-19T13:21:00Z",
+    "trade_time": "2026-10-19T13:37:59.053172023Z"
+  },
+  {
+    "time_et": "2026-10-19T09:51:01.036915-04:00",
+    "symbol": "CIEN",
+    "pct_change": 0.0309,
+    "window_minutes": 15,
+    "price": 349.33,
+    "ref_price": 338.845,
+    "ref_time": "2026-10-19T13:36:00Z",
+    "trade_time": "2026-10-19T13:50:52.228986242Z"
+  },
+  {
+    "time_et": "2026-10-19T10:19:01.153557-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0315,
+    "window_minutes": 15,
+    "price": 227.435,
+    "ref_price": 220.49,
+    "ref_time": "2026-10-19T14:04:00Z",
+    "trade_time": "2026-10-19T14:19:01.180222379Z"
   }
 ]
