@@ -1462,5 +1462,225 @@
     "ref_price": 183.73,
     "ref_time": "2026-10-22T18:06:00Z",
     "trade_time": "2026-10-22T18:21:34.939562774Z"
+  },
+  {
+    "time_et": "2026-10-26T09:32:01.221551-04:00",
+    "symbol": "EQT",
+    "pct_change": 0.0361,
+    "window_minutes": 15,
+    "price": 53.89,
+    "ref_price": 52.01,
+    "ref_time": "2026-10-26T13:17:00Z",
+    "trade_time": "2026-10-26T13:31:58.087145224Z"
+  },
+  {
+    "time_et": "2026-10-26T09:33:01.224666-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0326,
+    "window_minutes": 2,
+    "price": 189.09,
+    "ref_price": 183.115,
+    "ref_time": "2026-10-26T13:31:00Z",
+    "trade_time": "2026-10-26T13:33:02.251543067Z"
+  },
+  {
+    "time_et": "2026-10-26T09:45:01.234974-04:00",
+    "symbol": "FIX",
+    "pct_change": 0.0341,
+    "window_minutes": 15,
+    "price": 1215.3,
+    "ref_price": 1175.2,
+    "ref_time": "2026-10-26T13:30:00Z",
+    "trade_time": "2026-10-26T13:44:50.347849571Z"
+  },
+  {
+    "time_et": "2026-10-26T09:45:01.234974-04:00",
+    "symbol": "LITE",
+    "pct_change": 0.0352,
+    "window_minutes": 15,
+    "price": 787.29,
+    "ref_price": 760.52,
+    "ref_time": "2026-10-26T13:30:00Z",
+    "trade_time": "2026-10-26T13:44:57.637447407Z"
+  },
+  {
+    "time_et": "2026-10-26T09:45:01.234974-04:00",
+    "symbol": "WYNN",
+    "pct_change": 0.0318,
+    "window_minutes": 15,
+    "price": 75.06,
+    "ref_price": 72.75,
+    "ref_time": "2026-10-26T13:30:00Z",
+    "trade_time": "2026-10-26T13:43:32.917858385Z"
+  },
+  {
+    "time_et": "2026-10-26T09:45:31.232723-04:00",
+    "symbol": "FIX",
+    "pct_change": 0.049,
+    "window_minutes": 15,
+    "price": 1232.735,
+    "ref_price": 1175.2,
+    "ref_time": "2026-10-26T13:30:00Z",
+    "trade_time": "2026-10-26T13:45:27.162132903Z"
+  },
+  {
+    "time_et": "2026-10-26T09:45:46.239783-04:00",
+    "symbol": "LITE",
+    "pct_change": 0.0481,
+    "window_minutes": 15,
+    "price": 797.12,
+    "ref_price": 760.52,
+    "ref_time": "2026-10-26T13:30:00Z",
+    "trade_time": "2026-10-26T13:45:46.412132962Z"
+  },
+  {
+    "time_et": "2026-10-26T09:46:01.342271-04:00",
+    "symbol": "DOW",
+    "pct_change": 0.0331,
+    "window_minutes": 15,
+    "price": 34.01,
+    "ref_price": 32.92,
+    "ref_time": "2026-10-26T13:31:00Z",
+    "trade_time": "2026-10-26T13:45:59.809905543Z"
+  },
+  {
+    "time_et": "2026-10-26T09:46:16.235725-04:00",
+    "symbol": "LULU",
+    "pct_change": 0.0323,
+    "window_minutes": 15,
+    "price": 102.83,
+    "ref_price": 99.61,
+    "ref_time": "2026-10-26T13:31:00Z",
+    "trade_time": "2026-10-26T13:46:14.461009557Z"
+  },
+  {
+    "time_et": "2026-10-26T09:47:31.232477-04:00",
+    "symbol": "LULU",
+    "pct_change": 0.0454,
+    "window_minutes": 15,
+    "price": 103.48,
+    "ref_price": 98.99,
+    "ref_time": "2026-10-26T13:32:00Z",
+    "trade_time": "2026-10-26T13:47:27.342728939Z"
+  },
+  {
+    "time_et": "2026-10-26T09:48:16.221626-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0319,
+    "window_minutes": 15,
+    "price": 193.61,
+    "ref_price": 187.625,
+    "ref_time": "2026-10-26T13:33:00Z",
+    "trade_time": "2026-10-26T13:48:14.980258167Z"
+  },
+  {
+    "time_et": "2026-10-26T09:49:01.221562-04:00",
+    "symbol": "BE",
+    "pct_change": 0.0346,
+    "window_minutes": 15,
+    "price": 201.74,
+    "ref_price": 194.995,
+    "ref_time": "2026-10-26T13:34:00Z",
+    "trade_time": "2026-10-26T13:49:01.364028263Z"
+  },
+  {
+    "time_et": "2026-10-26T09:49:01.221562-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0425,
+    "window_minutes": 15,
+    "price": 195.66,
+    "ref_price": 187.69,
+    "ref_time": "2026-10-26T13:34:00Z",
+    "trade_time": "2026-10-26T13:49:02.33358117Z"
+  },
+  {
+    "time_et": "2026-10-26T09:49:31.222627-04:00",
+    "symbol": "CIEN",
+    "pct_change": 0.0302,
+    "window_minutes": 15,
+    "price": 328.87,
+    "ref_price": 319.22,
+    "ref_time": "2026-10-26T13:34:00Z",
+    "trade_time": "2026-10-26T13:49:24.374329959Z"
+  },
+  {
+    "time_et": "2026-10-26T09:50:46.219231-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0568,
+    "window_minutes": 15,
+    "price": 197.01,
+    "ref_price": 186.425,
+    "ref_time": "2026-10-26T13:35:00Z",
+    "trade_time": "2026-10-26T13:50:41.006352156Z"
+  },
+  {
+    "time_et": "2026-10-26T09:51:16.219226-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0697,
+    "window_minutes": 15,
+    "price": 198.11,
+    "ref_price": 185.2,
+    "ref_time": "2026-10-26T13:36:00Z",
+    "trade_time": "2026-10-26T13:51:16.548573993Z"
+  },
+  {
+    "time_et": "2026-10-26T09:52:01.317008-04:00",
+    "symbol": "EQT",
+    "pct_change": 0.0312,
+    "window_minutes": 15,
+    "price": 54.12,
+    "ref_price": 52.48,
+    "ref_time": "2026-10-26T13:37:00Z",
+    "trade_time": "2026-10-26T13:52:01.467920491Z"
+  },
+  {
+    "time_et": "2026-10-26T09:52:01.317008-04:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0827,
+    "window_minutes": 15,
+    "price": 199,
+    "ref_price": 183.8,
+    "ref_time": "2026-10-26T13:37:00Z",
+    "trade_time": "2026-10-26T13:51:55.503833752Z"
+  },
+  {
+    "time_et": "2026-10-26T09:55:46.220618-04:00",
+    "symbol": "MPC",
+    "pct_change": 0.0312,
+    "window_minutes": 15,
+    "price": 477.97,
+    "ref_price": 463.52,
+    "ref_time": "2026-10-26T13:39:00Z",
+    "trade_time": "2026-10-26T13:55:38.714890978Z"
+  },
+  {
+    "time_et": "2026-10-26T10:02:01.218281-04:00",
+    "symbol": "RDDT",
+    "pct_change": 0.0305,
+    "window_minutes": 15,
+    "price": 137.72,
+    "ref_price": 133.65,
+    "ref_time": "2026-10-26T13:47:00Z",
+    "trade_time": "2026-10-26T14:01:02.002358943Z"
+  },
+  {
+    "time_et": "2026-10-26T10:17:46.233458-04:00",
+    "symbol": "AKAM",
+    "pct_change": 0.0311,
+    "window_minutes": 15,
+    "price": 95.37,
+    "ref_price": 92.495,
+    "ref_time": "2026-10-26T14:02:00Z",
+    "trade_time": "2026-10-26T14:17:38.126607078Z"
+  },
+  {
+    "time_et": "2026-10-26T10:19:31.220868-04:00",
+    "symbol": "DDOG",
+    "pct_change": 0.0323,
+    "window_minutes": 15,
+    "price": 276.29,
+    "ref_price": 267.65,
+    "ref_time": "2026-10-26T14:02:00Z",
+    "trade_time": "2026-10-26T14:19:31.314530173Z"
   }
 ]
