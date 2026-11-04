@@ -2472,5 +2472,75 @@
     "ref_price": 693.53,
     "ref_time": "2026-10-29T15:26:00Z",
     "trade_time": "2026-10-29T15:41:27.02563376Z"
+  },
+  {
+    "time_et": "2026-11-04T11:20:06.689567-05:00",
+    "symbol": "MPWR",
+    "pct_change": 0.0318,
+    "window_minutes": 15,
+    "price": 1257.21,
+    "ref_price": 1218.42,
+    "ref_time": "2026-11-04T16:05:00Z",
+    "trade_time": "2026-11-04T16:20:06.538391588Z"
+  },
+  {
+    "time_et": "2026-11-04T11:51:31.108871-05:00",
+    "symbol": "SWKS",
+    "pct_change": 0.0348,
+    "window_minutes": 15,
+    "price": 83.62,
+    "ref_price": 80.81,
+    "ref_time": "2026-11-04T16:36:00Z",
+    "trade_time": "2026-11-04T16:51:30.99600151Z"
+  },
+  {
+    "time_et": "2026-11-04T11:54:01.114784-05:00",
+    "symbol": "URI",
+    "pct_change": 0.0312,
+    "window_minutes": 15,
+    "price": 1131.02,
+    "ref_price": 1096.82,
+    "ref_time": "2026-11-04T16:39:00Z",
+    "trade_time": "2026-11-04T16:53:55.648142397Z"
+  },
+  {
+    "time_et": "2026-11-04T12:24:16.152634-05:00",
+    "symbol": "INTC",
+    "pct_change": 0.0316,
+    "window_minutes": 15,
+    "price": 59.535,
+    "ref_price": 57.71,
+    "ref_time": "2026-11-04T17:09:00Z",
+    "trade_time": "2026-11-04T17:24:16.195859905Z"
+  },
+  {
+    "time_et": "2026-11-04T15:52:01.128209-05:00",
+    "symbol": "TPL",
+    "pct_change": 0.0328,
+    "window_minutes": 15,
+    "price": 286.81,
+    "ref_price": 277.7,
+    "ref_time": "2026-11-04T20:37:00Z",
+    "trade_time": "2026-11-04T20:51:24.34007619Z"
+  },
+  {
+    "time_et": "2026-11-04T15:56:46.101448-05:00",
+    "symbol": "QCOM",
+    "pct_change": 0.0303,
+    "window_minutes": 15,
+    "price": 172.26,
+    "ref_price": 167.19,
+    "ref_time": "2026-11-04T20:41:00Z",
+    "trade_time": "2026-11-04T20:56:46.186407169Z"
+  },
+  {
+    "time_et": "2026-11-04T15:59:01.109316-05:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0304,
+    "window_minutes": 15,
+    "price": 257.865,
+    "ref_price": 250.26,
+    "ref_time": "2026-11-04T20:44:00Z",
+    "trade_time": "2026-11-04T20:59:00.695113759Z"
   }
 ]
