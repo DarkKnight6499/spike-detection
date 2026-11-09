@@ -3352,5 +3352,665 @@
     "ref_price": 382,
     "ref_time": "2026-11-05T19:39:00Z",
     "trade_time": "2026-11-05T19:52:37.586935964Z"
+  },
+  {
+    "time_et": "2026-11-09T09:32:01.171654-05:00",
+    "symbol": "FERG",
+    "pct_change": 0.0324,
+    "window_minutes": 2,
+    "price": 256.105,
+    "ref_price": 248.065,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:31:56.791154647Z"
+  },
+  {
+    "time_et": "2026-11-09T09:33:31.152097-05:00",
+    "symbol": "BE",
+    "pct_change": 0.0388,
+    "window_minutes": 15,
+    "price": 185.86,
+    "ref_price": 178.92,
+    "ref_time": "2026-11-09T14:12:00Z",
+    "trade_time": "2026-11-09T14:33:31.259955173Z"
+  },
+  {
+    "time_et": "2026-11-09T09:34:46.193021-05:00",
+    "symbol": "COHR",
+    "pct_change": 0.0309,
+    "window_minutes": 2,
+    "price": 206.005,
+    "ref_price": 199.83,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:34:46.359762979Z"
+  },
+  {
+    "time_et": "2026-11-09T09:35:01.197974-05:00",
+    "symbol": "LITE",
+    "pct_change": 0.0336,
+    "window_minutes": 15,
+    "price": 563.83,
+    "ref_price": 545.5,
+    "ref_time": "2026-11-09T14:08:00Z",
+    "trade_time": "2026-11-09T14:35:00.233481477Z"
+  },
+  {
+    "time_et": "2026-11-09T09:35:16.153766-05:00",
+    "symbol": "BE",
+    "pct_change": 0.0507,
+    "window_minutes": 15,
+    "price": 188,
+    "ref_price": 178.92,
+    "ref_time": "2026-11-09T14:12:00Z",
+    "trade_time": "2026-11-09T14:35:14.700026933Z"
+  },
+  {
+    "time_et": "2026-11-09T09:35:46.201921-05:00",
+    "symbol": "AVGO",
+    "pct_change": 0.03,
+    "window_minutes": 15,
+    "price": 311.62,
+    "ref_price": 302.53,
+    "ref_time": "2026-11-09T14:07:00Z",
+    "trade_time": "2026-11-09T14:35:44.824497296Z"
+  },
+  {
+    "time_et": "2026-11-09T09:37:01.164860-05:00",
+    "symbol": "CIEN",
+    "pct_change": 0.034,
+    "window_minutes": 15,
+    "price": 260,
+    "ref_price": 251.44,
+    "ref_time": "2026-11-09T14:22:00Z",
+    "trade_time": "2026-11-09T14:37:00.753204125Z"
+  },
+  {
+    "time_et": "2026-11-09T09:37:01.164860-05:00",
+    "symbol": "LITE",
+    "pct_change": 0.0484,
+    "window_minutes": 15,
+    "price": 571.91,
+    "ref_price": 545.5,
+    "ref_time": "2026-11-09T14:08:00Z",
+    "trade_time": "2026-11-09T14:36:55.965269693Z"
+  },
+  {
+    "time_et": "2026-11-09T09:37:31.160056-05:00",
+    "symbol": "BE",
+    "pct_change": 0.0632,
+    "window_minutes": 15,
+    "price": 190.23,
+    "ref_price": 178.92,
+    "ref_time": "2026-11-09T14:12:00Z",
+    "trade_time": "2026-11-09T14:37:30.024636549Z"
+  },
+  {
+    "time_et": "2026-11-09T09:43:46.186393-05:00",
+    "symbol": "FLEX",
+    "pct_change": 0.0341,
+    "window_minutes": 15,
+    "price": 75.26,
+    "ref_price": 72.78,
+    "ref_time": "2026-11-09T14:28:00Z",
+    "trade_time": "2026-11-09T14:43:38.484265771Z"
+  },
+  {
+    "time_et": "2026-11-09T09:44:01.164577-05:00",
+    "symbol": "AMAT",
+    "pct_change": 0.0328,
+    "window_minutes": 15,
+    "price": 356.16,
+    "ref_price": 344.84,
+    "ref_time": "2026-11-09T14:29:00Z",
+    "trade_time": "2026-11-09T14:43:58.817906221Z"
+  },
+  {
+    "time_et": "2026-11-09T09:44:31.152994-05:00",
+    "symbol": "LITE",
+    "pct_change": 0.0593,
+    "window_minutes": 15,
+    "price": 580.89,
+    "ref_price": 548.39,
+    "ref_time": "2026-11-09T14:28:00Z",
+    "trade_time": "2026-11-09T14:44:21.680151485Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "BBY",
+    "pct_change": 0.0362,
+    "window_minutes": 15,
+    "price": 105.25,
+    "ref_price": 101.57,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:44:49.212290073Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "COHR",
+    "pct_change": 0.0422,
+    "window_minutes": 15,
+    "price": 209.17,
+    "ref_price": 200.705,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:44:55.419680434Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "ECHO",
+    "pct_change": 0.0318,
+    "window_minutes": 15,
+    "price": 97.81,
+    "ref_price": 94.8,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:44:38.541782817Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "FOXA",
+    "pct_change": 0.032,
+    "window_minutes": 15,
+    "price": 69.42,
+    "ref_price": 67.265,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:01.208105318Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "FERG",
+    "pct_change": 0.0455,
+    "window_minutes": 15,
+    "price": 259.34,
+    "ref_price": 248.065,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:01.100996992Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "HONA",
+    "pct_change": 0.0315,
+    "window_minutes": 15,
+    "price": 159.34,
+    "ref_price": 154.47,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:43:22.318631963Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "LRCX",
+    "pct_change": 0.0328,
+    "window_minutes": 15,
+    "price": 210.94,
+    "ref_price": 204.25,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:00.695531421Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "MRVL",
+    "pct_change": 0.0436,
+    "window_minutes": 15,
+    "price": 149.18,
+    "ref_price": 142.95,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:00.353944886Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "WDC",
+    "pct_change": 0.0461,
+    "window_minutes": 15,
+    "price": 283.48,
+    "ref_price": 271,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:01.252853963Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "STX",
+    "pct_change": 0.0401,
+    "window_minutes": 15,
+    "price": 487.66,
+    "ref_price": 468.875,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:44:56.325491451Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "SNDK",
+    "pct_change": 0.0329,
+    "window_minutes": 15,
+    "price": 872.4,
+    "ref_price": 844.61,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:01.654172676Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:01.185596-05:00",
+    "symbol": "TSLA",
+    "pct_change": 0.0403,
+    "window_minutes": 15,
+    "price": 375.43,
+    "ref_price": 360.875,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:02.216237634Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:16.159215-05:00",
+    "symbol": "MPWR",
+    "pct_change": 0.0335,
+    "window_minutes": 15,
+    "price": 1260.06,
+    "ref_price": 1219.23,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:14.219524647Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:46.163084-05:00",
+    "symbol": "ON",
+    "pct_change": 0.03,
+    "window_minutes": 15,
+    "price": 66.34,
+    "ref_price": 64.405,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:46.834765917Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:46.163084-05:00",
+    "symbol": "TER",
+    "pct_change": 0.03,
+    "window_minutes": 15,
+    "price": 229.71,
+    "ref_price": 223.01,
+    "ref_time": "2026-11-09T14:29:00Z",
+    "trade_time": "2026-11-09T14:45:39.320772418Z"
+  },
+  {
+    "time_et": "2026-11-09T09:45:46.163084-05:00",
+    "symbol": "STX",
+    "pct_change": 0.0518,
+    "window_minutes": 15,
+    "price": 493.16,
+    "ref_price": 468.875,
+    "ref_time": "2026-11-09T14:30:00Z",
+    "trade_time": "2026-11-09T14:45:47.010616896Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:01.171544-05:00",
+    "symbol": "ANET",
+    "pct_change": 0.0305,
+    "window_minutes": 15,
+    "price": 182.31,
+    "ref_price": 176.915,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:46:00.301918655Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:01.171544-05:00",
+    "symbol": "FOX",
+    "pct_change": 0.0333,
+    "window_minutes": 15,
+    "price": 61.85,
+    "ref_price": 59.855,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:43:48.303916369Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:01.171544-05:00",
+    "symbol": "LITE",
+    "pct_change": 0.0702,
+    "window_minutes": 15,
+    "price": 587.73,
+    "ref_price": 549.19,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:45:51.645503839Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:01.171544-05:00",
+    "symbol": "SNDK",
+    "pct_change": 0.0486,
+    "window_minutes": 15,
+    "price": 878.43,
+    "ref_price": 837.755,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:46:02.180659078Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:01.171544-05:00",
+    "symbol": "VRT",
+    "pct_change": 0.0321,
+    "window_minutes": 15,
+    "price": 194.8,
+    "ref_price": 188.745,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:46:00.024326214Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:16.154470-05:00",
+    "symbol": "Q",
+    "pct_change": 0.0309,
+    "window_minutes": 15,
+    "price": 122.29,
+    "ref_price": 118.63,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:46:08.046956022Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:16.154470-05:00",
+    "symbol": "OKTA",
+    "pct_change": 0.0361,
+    "window_minutes": 15,
+    "price": 173.53,
+    "ref_price": 167.49,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:46:09.42409265Z"
+  },
+  {
+    "time_et": "2026-11-09T09:46:46.149866-05:00",
+    "symbol": "CEG",
+    "pct_change": 0.0316,
+    "window_minutes": 15,
+    "price": 258.08,
+    "ref_price": 250.18,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:46:45.920354354Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:01.151495-05:00",
+    "symbol": "FLEX",
+    "pct_change": 0.0458,
+    "window_minutes": 15,
+    "price": 75.735,
+    "ref_price": 72.42,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:46:58.635607332Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:01.151495-05:00",
+    "symbol": "GLW",
+    "pct_change": 0.0312,
+    "window_minutes": 15,
+    "price": 111.435,
+    "ref_price": 108.065,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:46:43.544162282Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:01.151495-05:00",
+    "symbol": "LITE",
+    "pct_change": 0.084,
+    "window_minutes": 15,
+    "price": 593.53,
+    "ref_price": 547.535,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:00.304842299Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:01.151495-05:00",
+    "symbol": "SMCI",
+    "pct_change": 0.0368,
+    "window_minutes": 15,
+    "price": 28.34,
+    "ref_price": 27.335,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:01.614131198Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:16.171005-05:00",
+    "symbol": "DELL",
+    "pct_change": 0.0343,
+    "window_minutes": 15,
+    "price": 340.48,
+    "ref_price": 329.18,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:16.036894383Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:16.171005-05:00",
+    "symbol": "MU",
+    "pct_change": 0.0306,
+    "window_minutes": 15,
+    "price": 713.855,
+    "ref_price": 692.635,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:14.701538026Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:31.163316-05:00",
+    "symbol": "COHR",
+    "pct_change": 0.0532,
+    "window_minutes": 15,
+    "price": 210.46,
+    "ref_price": 199.83,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:25.393134679Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:46.158342-05:00",
+    "symbol": "CIEN",
+    "pct_change": 0.0476,
+    "window_minutes": 15,
+    "price": 267.2,
+    "ref_price": 255.05,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:44.785836104Z"
+  },
+  {
+    "time_et": "2026-11-09T09:47:46.158342-05:00",
+    "symbol": "FIX",
+    "pct_change": 0.0304,
+    "window_minutes": 15,
+    "price": 1077.655,
+    "ref_price": 1045.89,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:44.593533029Z"
+  },
+  {
+    "time_et": "2026-11-09T09:48:01.155320-05:00",
+    "symbol": "AMD",
+    "pct_change": 0.0312,
+    "window_minutes": 15,
+    "price": 487.16,
+    "ref_price": 472.43,
+    "ref_time": "2026-11-09T14:33:00Z",
+    "trade_time": "2026-11-09T14:48:00.787309157Z"
+  },
+  {
+    "time_et": "2026-11-09T09:48:01.155320-05:00",
+    "symbol": "NRG",
+    "pct_change": 0.0326,
+    "window_minutes": 15,
+    "price": 94.16,
+    "ref_price": 91.19,
+    "ref_time": "2026-11-09T14:33:00Z",
+    "trade_time": "2026-11-09T14:48:01.950788656Z"
+  },
+  {
+    "time_et": "2026-11-09T09:48:01.155320-05:00",
+    "symbol": "P",
+    "pct_change": 0.04,
+    "window_minutes": 15,
+    "price": 101.42,
+    "ref_price": 97.52,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:47:57.393054189Z"
+  },
+  {
+    "time_et": "2026-11-09T09:48:31.183752-05:00",
+    "symbol": "GNRC",
+    "pct_change": 0.0301,
+    "window_minutes": 15,
+    "price": 188.11,
+    "ref_price": 182.61,
+    "ref_time": "2026-11-09T14:33:00Z",
+    "trade_time": "2026-11-09T14:48:21.002446739Z"
+  },
+  {
+    "time_et": "2026-11-09T09:48:46.168749-05:00",
+    "symbol": "URI",
+    "pct_change": 0.0302,
+    "window_minutes": 15,
+    "price": 1116.735,
+    "ref_price": 1083.96,
+    "ref_time": "2026-11-09T14:32:00Z",
+    "trade_time": "2026-11-09T14:48:36.112357277Z"
+  },
+  {
+    "time_et": "2026-11-09T09:49:01.354803-05:00",
+    "symbol": "MRNA",
+    "pct_change": 0.034,
+    "window_minutes": 15,
+    "price": 263.88,
+    "ref_price": 255.2,
+    "ref_time": "2026-11-09T14:34:00Z",
+    "trade_time": "2026-11-09T14:48:58.027564609Z"
+  },
+  {
+    "time_et": "2026-11-09T09:49:31.170784-05:00",
+    "symbol": "HPE",
+    "pct_change": 0.0328,
+    "window_minutes": 15,
+    "price": 47.21,
+    "ref_price": 45.71,
+    "ref_time": "2026-11-09T14:34:00Z",
+    "trade_time": "2026-11-09T14:49:29.97054315Z"
+  },
+  {
+    "time_et": "2026-11-09T09:49:31.170784-05:00",
+    "symbol": "PWR",
+    "pct_change": 0.0334,
+    "window_minutes": 15,
+    "price": 568.835,
+    "ref_price": 550.45,
+    "ref_time": "2026-11-09T14:33:00Z",
+    "trade_time": "2026-11-09T14:49:31.612232542Z"
+  },
+  {
+    "time_et": "2026-11-09T09:50:01.170444-05:00",
+    "symbol": "DELL",
+    "pct_change": 0.0452,
+    "window_minutes": 15,
+    "price": 344.07,
+    "ref_price": 329.19,
+    "ref_time": "2026-11-09T14:35:00Z",
+    "trade_time": "2026-11-09T14:49:49.781220112Z"
+  },
+  {
+    "time_et": "2026-11-09T09:51:01.168423-05:00",
+    "symbol": "NTAP",
+    "pct_change": 0.0308,
+    "window_minutes": 15,
+    "price": 173.81,
+    "ref_price": 168.62,
+    "ref_time": "2026-11-09T14:36:00Z",
+    "trade_time": "2026-11-09T14:49:35.417264067Z"
+  },
+  {
+    "time_et": "2026-11-09T09:51:01.168423-05:00",
+    "symbol": "QCOM",
+    "pct_change": 0.0336,
+    "window_minutes": 15,
+    "price": 169.99,
+    "ref_price": 164.47,
+    "ref_time": "2026-11-09T14:36:00Z",
+    "trade_time": "2026-11-09T14:50:48.734332874Z"
+  },
+  {
+    "time_et": "2026-11-09T09:51:31.158782-05:00",
+    "symbol": "TPL",
+    "pct_change": 0.0311,
+    "window_minutes": 15,
+    "price": 277.11,
+    "ref_price": 268.745,
+    "ref_time": "2026-11-09T14:31:00Z",
+    "trade_time": "2026-11-09T14:51:22.224516127Z"
+  },
+  {
+    "time_et": "2026-11-09T09:52:01.159482-05:00",
+    "symbol": "HOOD",
+    "pct_change": 0.0306,
+    "window_minutes": 15,
+    "price": 84.11,
+    "ref_price": 81.61,
+    "ref_time": "2026-11-09T14:37:00Z",
+    "trade_time": "2026-11-09T14:52:00.268325151Z"
+  },
+  {
+    "time_et": "2026-11-09T09:53:01.165177-05:00",
+    "symbol": "COF",
+    "pct_change": 0.0316,
+    "window_minutes": 15,
+    "price": 199.105,
+    "ref_price": 193.01,
+    "ref_time": "2026-11-09T14:38:00Z",
+    "trade_time": "2026-11-09T14:52:45.297321223Z"
+  },
+  {
+    "time_et": "2026-11-09T09:54:16.170520-05:00",
+    "symbol": "INTC",
+    "pct_change": 0.03,
+    "window_minutes": 15,
+    "price": 58.345,
+    "ref_price": 56.645,
+    "ref_time": "2026-11-09T14:39:00Z",
+    "trade_time": "2026-11-09T14:54:16.63480425Z"
+  },
+  {
+    "time_et": "2026-11-09T09:54:16.170520-05:00",
+    "symbol": "SMCI",
+    "pct_change": 0.0505,
+    "window_minutes": 15,
+    "price": 29.04,
+    "ref_price": 27.645,
+    "ref_time": "2026-11-09T14:39:00Z",
+    "trade_time": "2026-11-09T14:54:15.876108638Z"
+  },
+  {
+    "time_et": "2026-11-09T09:55:01.175068-05:00",
+    "symbol": "SYF",
+    "pct_change": 0.032,
+    "window_minutes": 15,
+    "price": 72.96,
+    "ref_price": 70.7,
+    "ref_time": "2026-11-09T14:40:00Z",
+    "trade_time": "2026-11-09T14:55:00.919419317Z"
+  },
+  {
+    "time_et": "2026-11-09T09:55:16.203618-05:00",
+    "symbol": "COF",
+    "pct_change": 0.0433,
+    "window_minutes": 15,
+    "price": 200.56,
+    "ref_price": 192.23,
+    "ref_time": "2026-11-09T14:40:00Z",
+    "trade_time": "2026-11-09T14:55:09.60736105Z"
+  },
+  {
+    "time_et": "2026-11-09T09:56:31.167521-05:00",
+    "symbol": "PANW",
+    "pct_change": 0.0307,
+    "window_minutes": 15,
+    "price": 324.395,
+    "ref_price": 314.725,
+    "ref_time": "2026-11-09T14:41:00Z",
+    "trade_time": "2026-11-09T14:56:28.306317217Z"
+  },
+  {
+    "time_et": "2026-11-09T10:05:16.154879-05:00",
+    "symbol": "MRNA",
+    "pct_change": 0.0312,
+    "window_minutes": 15,
+    "price": 270.34,
+    "ref_price": 262.16,
+    "ref_time": "2026-11-09T14:50:00Z",
+    "trade_time": "2026-11-09T15:05:07.962506443Z"
+  },
+  {
+    "time_et": "2026-11-09T10:57:31.155894-05:00",
+    "symbol": "MPWR",
+    "pct_change": 0.0305,
+    "window_minutes": 15,
+    "price": 1347.995,
+    "ref_price": 1308.1,
+    "ref_time": "2026-11-09T15:42:00Z",
+    "trade_time": "2026-11-09T15:57:28.986347043Z"
   }
 ]
